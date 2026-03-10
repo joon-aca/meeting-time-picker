@@ -1,19 +1,26 @@
-import { VoteValue } from "@/types/poll";
 import { Check, HelpCircle, X } from "lucide-react";
+import { VoteValue } from "@/lib/poll-types";
 
 interface VoteCellProps {
   value: VoteValue | undefined;
   onChange: (value: VoteValue) => void;
 }
 
-const cycleOrder: VoteValue[] = ["yes", "maybe", "no"];
-
 export function VoteCell({ value, onChange }: VoteCellProps) {
-  const currentIndex = value ? cycleOrder.indexOf(value) : -1;
+  const displayValue = value === "NO" ? undefined : value;
 
   const handleClick = () => {
-    const nextIndex = (currentIndex + 1) % cycleOrder.length;
-    onChange(cycleOrder[nextIndex]);
+    if (!displayValue) {
+      onChange("MAYBE");
+      return;
+    }
+
+    if (displayValue === "MAYBE") {
+      onChange("YES");
+      return;
+    }
+
+    onChange("NO");
   };
 
   return (
@@ -21,26 +28,20 @@ export function VoteCell({ value, onChange }: VoteCellProps) {
       type="button"
       onClick={handleClick}
       className={`
-        w-full h-9 rounded-lg flex items-center justify-center
-        transition-all duration-150 ease-out
-        font-medium text-sm select-none cursor-pointer
-        border
+        h-9 w-full cursor-pointer select-none rounded-lg border text-sm font-medium transition-all duration-150 ease-out
         ${
-          value === "yes"
-            ? "bg-vote-yes text-white border-vote-yes shadow-sm"
-            : value === "maybe"
-            ? "bg-vote-maybe text-white border-vote-maybe shadow-sm"
-            : value === "no"
-            ? "bg-vote-no text-muted-foreground border-vote-no"
-            : "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:border-primary/50"
+          displayValue === "YES"
+            ? "border-vote-yes bg-vote-yes text-white shadow-sm"
+            : displayValue === "MAYBE"
+              ? "border-vote-maybe bg-vote-maybe text-white shadow-sm"
+              : "border-vote-no bg-vote-no text-muted-foreground hover:border-muted-foreground/40"
         }
       `}
-      aria-label={value ?? "not voted"}
+      aria-label={displayValue ?? "no"}
     >
-      {value === "yes" && <Check className="w-4 h-4" strokeWidth={2.5} />}
-      {value === "maybe" && <HelpCircle className="w-4 h-4" strokeWidth={2} />}
-      {value === "no" && <X className="w-3.5 h-3.5" strokeWidth={2} />}
-      {!value && <span className="text-xs font-semibold tracking-wide">Vote</span>}
+      {displayValue === "YES" ? <Check className="mx-auto h-4 w-4" strokeWidth={2.5} /> : null}
+      {displayValue === "MAYBE" ? <HelpCircle className="mx-auto h-4 w-4" strokeWidth={2} /> : null}
+      {!displayValue ? <X className="mx-auto h-3.5 w-3.5" strokeWidth={2} /> : null}
     </button>
   );
 }

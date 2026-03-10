@@ -1,73 +1,174 @@
-# Welcome to your Lovable project
+# Meeting Time Picker
 
-## Project info
+Next.js 15 scheduling poll app backed by Prisma, SQLite, Zod, and date-fns.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Stack
 
-## How can I edit this code?
+- Next.js 15 App Router
+- TypeScript
+- Tailwind CSS
+- Prisma + SQLite
+- Zod
+- date-fns
 
-There are several ways of editing your application.
+## What is in the repo
 
-**Use Lovable**
+- One sample March 2026 poll
+- Public-safe sample invitees and sample responses
+- Real app wiring end to end with Prisma + SQLite
+- Local-first deployment path with no container requirement
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Seed data
 
-Changes made via Lovable will be committed automatically to this repo.
+Tracked sample data lives in [prisma/seed-data/polls.json](/Users/joon/dev/github/meeting-time-picker/prisma/seed-data/polls.json).
 
-**Use your preferred IDE**
+If you want to keep private board member names or private seed data out of git, create:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+cp prisma/seed-data/polls.json prisma/seed-data/polls.local.json
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Then edit `prisma/seed-data/polls.local.json`.
 
-Follow these steps:
+`npm run prisma:seed` will automatically prefer `polls.local.json` when it exists. That file is gitignored.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Important:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- `npm run prisma:seed` is destructive
+- it deletes and recreates the poll, invitees, participants, and votes
+- do not run it after real responses exist unless you intentionally want a reset
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Local setup
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Run these commands exactly:
+
+```bash
+cp .env.example .env
+npm install
+npx prisma migrate dev --name init
+npm run prisma:seed
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Then open [http://localhost:3000/poll/aca-board-meeting-picker](http://localhost:3000/poll/aca-board-meeting-picker).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Environment
 
-**Use GitHub Codespaces**
+Local development uses [`.env.example`](/Users/joon/dev/github/meeting-time-picker/.env.example):
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```env
+DATABASE_URL="file:./dev.db"
+```
 
-## What technologies are used for this project?
+The Prisma datasource is configured in [prisma/schema.prisma](/Users/joon/dev/github/meeting-time-picker/prisma/schema.prisma).
 
-This project is built with:
+## Simple server deploy behind Caddy
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+This app can be deployed as:
 
-## How can I deploy this project?
+- one Node process
+- one local SQLite file on disk
+- one Caddy reverse proxy entry
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+No container is required.
 
-## Can I connect a custom domain to my Lovable project?
+### 1. Clone on the server
 
-Yes, you can!
+```bash
+git clone <your-repo-url> /srv/meeting-time-picker
+cd /srv/meeting-time-picker
+cp .env.example .env
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Update `.env` to point at the server database file:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```env
+DATABASE_URL="file:/srv/meeting-time-picker/prisma/prod.db"
+```
+
+### 2. Install and build
+
+```bash
+npm install
+npx prisma migrate deploy
+npm run build
+```
+
+### 3. Seed once if you want demo/sample data
+
+```bash
+npm run prisma:seed
+```
+
+Again: this resets data. Do not use it on a live poll unless reset is intentional.
+
+### 4. Pick a free port and generate the proxy snippet
+
+The helper script finds a free local port and prints matching environment, Caddy, and systemd snippets:
+
+```bash
+npm run deploy:plan -- --domain polls.example.com --app-dir /srv/meeting-time-picker
+```
+
+By default it picks a random free high port from `41000-48999`.
+
+You can also change the search range:
+
+```bash
+npm run deploy:plan -- --domain polls.example.com --app-dir /srv/meeting-time-picker --start 42000 --end 42999
+```
+
+### 5. Run the app
+
+Example:
+
+```bash
+PORT=43173 NODE_ENV=production npm run start
+```
+
+### 6. Proxy with Caddy
+
+Example Caddy block:
+
+```caddy
+polls.example.com {
+  reverse_proxy 127.0.0.1:43173
+}
+```
+
+### 7. Keep it running
+
+Use `systemd` or `pm2`.
+
+`systemd` is the cleaner option on a normal Linux server.
+
+Minimal example:
+
+```ini
+[Unit]
+Description=Meeting Time Picker
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/meeting-time-picker
+Environment=NODE_ENV=production
+Environment=PORT=43173
+Environment=DATABASE_URL=file:/srv/meeting-time-picker/prisma/prod.db
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+User=www-data
+
+[Install]
+WantedBy=multi-user.target
+```
+
+## Project files
+
+- Prisma schema: [prisma/schema.prisma](/Users/joon/dev/github/meeting-time-picker/prisma/schema.prisma)
+- Seed script: [prisma/seed.ts](/Users/joon/dev/github/meeting-time-picker/prisma/seed.ts)
+- Sample seed JSON: [prisma/seed-data/polls.json](/Users/joon/dev/github/meeting-time-picker/prisma/seed-data/polls.json)
+- Deploy helper: [scripts/generate-deploy-config.mjs](/Users/joon/dev/github/meeting-time-picker/scripts/generate-deploy-config.mjs)
+- Poll page: [src/app/poll/[slug]/page.tsx](/Users/joon/dev/github/meeting-time-picker/src/app/poll/[slug]/page.tsx)
+- Poll API: [src/app/api/polls/[slug]/participant/route.ts](/Users/joon/dev/github/meeting-time-picker/src/app/api/polls/[slug]/participant/route.ts)

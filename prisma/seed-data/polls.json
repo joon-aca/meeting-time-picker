@@ -1,0 +1,884 @@
+[
+  {
+    "slug": "aca-board-meeting-picker",
+    "title": "Quarterly Planning Meeting Picker",
+    "description": "Help the team pick a time for the next planning meeting. Review the proposed dates and mark your availability so we can lock it in.",
+    "timezone": "America/Los_Angeles",
+    "createdAt": "2026-03-01T10:00:00.000Z",
+    "timeslots": [
+      {
+        "date": "2026-03-17",
+        "startTime": "08:00",
+        "endTime": "09:30"
+      },
+      {
+        "date": "2026-03-17",
+        "startTime": "08:30",
+        "endTime": "10:00"
+      },
+      {
+        "date": "2026-03-17",
+        "startTime": "09:00",
+        "endTime": "10:30"
+      },
+      {
+        "date": "2026-03-17",
+        "startTime": "09:30",
+        "endTime": "11:00"
+      },
+      {
+        "date": "2026-03-18",
+        "startTime": "08:00",
+        "endTime": "09:30"
+      },
+      {
+        "date": "2026-03-18",
+        "startTime": "08:30",
+        "endTime": "10:00"
+      },
+      {
+        "date": "2026-03-18",
+        "startTime": "09:00",
+        "endTime": "10:30"
+      },
+      {
+        "date": "2026-03-18",
+        "startTime": "09:30",
+        "endTime": "11:00"
+      },
+      {
+        "date": "2026-03-19",
+        "startTime": "08:00",
+        "endTime": "09:30"
+      },
+      {
+        "date": "2026-03-19",
+        "startTime": "08:30",
+        "endTime": "10:00"
+      },
+      {
+        "date": "2026-03-19",
+        "startTime": "09:00",
+        "endTime": "10:30"
+      },
+      {
+        "date": "2026-03-19",
+        "startTime": "09:30",
+        "endTime": "11:00"
+      },
+      {
+        "date": "2026-03-24",
+        "startTime": "08:00",
+        "endTime": "09:30"
+      },
+      {
+        "date": "2026-03-24",
+        "startTime": "08:30",
+        "endTime": "10:00"
+      },
+      {
+        "date": "2026-03-24",
+        "startTime": "09:00",
+        "endTime": "10:30"
+      },
+      {
+        "date": "2026-03-24",
+        "startTime": "09:30",
+        "endTime": "11:00"
+      },
+      {
+        "date": "2026-03-25",
+        "startTime": "08:00",
+        "endTime": "09:30"
+      },
+      {
+        "date": "2026-03-25",
+        "startTime": "08:30",
+        "endTime": "10:00"
+      },
+      {
+        "date": "2026-03-25",
+        "startTime": "09:00",
+        "endTime": "10:30"
+      },
+      {
+        "date": "2026-03-25",
+        "startTime": "09:30",
+        "endTime": "11:00"
+      },
+      {
+        "date": "2026-03-26",
+        "startTime": "08:00",
+        "endTime": "09:30"
+      },
+      {
+        "date": "2026-03-26",
+        "startTime": "08:30",
+        "endTime": "10:00"
+      },
+      {
+        "date": "2026-03-26",
+        "startTime": "09:00",
+        "endTime": "10:30"
+      },
+      {
+        "date": "2026-03-26",
+        "startTime": "09:30",
+        "endTime": "11:00"
+      }
+    ],
+    "invitees": [
+      {
+        "name": "Avery",
+        "timeZone": "America/New_York",
+        "timeZoneLabel": "EDT"
+      },
+      {
+        "name": "Greta",
+        "timeZone": "Europe/Berlin",
+        "timeZoneLabel": "European TimeZone"
+      },
+      {
+        "name": "Lwazi",
+        "timeZone": "Africa/Maputo",
+        "timeZoneLabel": "CAT"
+      },
+      {
+        "name": "Maya",
+        "timeZone": "America/Los_Angeles",
+        "timeZoneLabel": "PDT"
+      },
+      {
+        "name": "Jules",
+        "timeZone": "America/Los_Angeles",
+        "timeZoneLabel": "PDT"
+      },
+      {
+        "name": "Omar",
+        "timeZone": "America/New_York",
+        "timeZoneLabel": "EDT"
+      },
+      {
+        "name": "Noah",
+        "timeZone": "America/Los_Angeles",
+        "timeZoneLabel": "PDT"
+      }
+    ],
+    "participants": [
+      {
+        "name": "Avery",
+        "submittedAt": "2026-03-10T16:00:00.000Z",
+        "votes": [
+          {
+            "slotOrder": 0,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 1,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 2,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 3,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 4,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 5,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 6,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 7,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 8,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 9,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 10,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 11,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 12,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 13,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 14,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 15,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 16,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 17,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 18,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 19,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 20,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 21,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 22,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 23,
+            "value": "NO"
+          }
+        ]
+      },
+      {
+        "name": "Greta",
+        "submittedAt": "2026-03-10T16:08:00.000Z",
+        "votes": [
+          {
+            "slotOrder": 0,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 1,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 2,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 3,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 4,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 5,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 6,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 7,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 8,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 9,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 10,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 11,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 12,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 13,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 14,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 15,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 16,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 17,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 18,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 19,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 20,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 21,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 22,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 23,
+            "value": "NO"
+          }
+        ]
+      },
+      {
+        "name": "Lwazi",
+        "submittedAt": "2026-03-10T16:14:00.000Z",
+        "votes": [
+          {
+            "slotOrder": 0,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 1,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 2,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 3,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 4,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 5,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 6,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 7,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 8,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 9,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 10,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 11,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 12,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 13,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 14,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 15,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 16,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 17,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 18,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 19,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 20,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 21,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 22,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 23,
+            "value": "NO"
+          }
+        ]
+      },
+      {
+        "name": "Maya",
+        "submittedAt": "2026-03-10T16:21:00.000Z",
+        "votes": [
+          {
+            "slotOrder": 0,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 1,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 2,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 3,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 4,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 5,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 6,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 7,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 8,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 9,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 10,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 11,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 12,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 13,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 14,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 15,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 16,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 17,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 18,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 19,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 20,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 21,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 22,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 23,
+            "value": "NO"
+          }
+        ]
+      },
+      {
+        "name": "Omar",
+        "submittedAt": "2026-03-10T16:27:00.000Z",
+        "votes": [
+          {
+            "slotOrder": 0,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 1,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 2,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 3,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 4,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 5,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 6,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 7,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 8,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 9,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 10,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 11,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 12,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 13,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 14,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 15,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 16,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 17,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 18,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 19,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 20,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 21,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 22,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 23,
+            "value": "NO"
+          }
+        ]
+      },
+      {
+        "name": "Noah",
+        "submittedAt": "2026-03-10T16:33:00.000Z",
+        "votes": [
+          {
+            "slotOrder": 0,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 1,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 2,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 3,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 4,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 5,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 6,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 7,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 8,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 9,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 10,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 11,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 12,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 13,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 14,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 15,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 16,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 17,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 18,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 19,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 20,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 21,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 22,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 23,
+            "value": "MAYBE"
+          }
+        ]
+      },
+      {
+        "name": "Jules",
+        "submittedAt": "2026-03-10T17:05:00.000Z",
+        "votes": [
+          {
+            "slotOrder": 0,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 1,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 2,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 3,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 4,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 5,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 6,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 7,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 8,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 9,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 10,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 11,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 12,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 13,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 14,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 15,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 16,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 17,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 18,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 19,
+            "value": "NO"
+          },
+          {
+            "slotOrder": 20,
+            "value": "MAYBE"
+          },
+          {
+            "slotOrder": 21,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 22,
+            "value": "YES"
+          },
+          {
+            "slotOrder": 23,
+            "value": "NO"
+          }
+        ]
+      }
+    ]
+  }
+]

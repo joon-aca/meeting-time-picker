@@ -3,9 +3,5 @@ interface SectionLabelProps {
 }
 
 export function SectionLabel({ children }: SectionLabelProps) {
-  return (
-    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
-      {children}
-    </h2>
-  );
+  return <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{children}</h2>;
 }

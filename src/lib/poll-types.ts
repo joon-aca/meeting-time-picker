@@ -1,11 +1,13 @@
-export type VoteValue = "yes" | "maybe" | "no";
+export const voteValues = ["YES", "MAYBE", "NO"] as const;
+
+export type VoteValue = (typeof voteValues)[number];
 
 export interface Timeslot {
   id: string;
-  date: string;       // ISO date string e.g. "2026-03-15"
-  startTime: string;  // e.g. "09:00"
-  endTime: string;    // e.g. "10:00"
-  label: string;      // formatted display label
+  date: string;
+  startTime: string;
+  endTime: string;
+  label: string;
 }
 
 export interface Vote {
@@ -17,7 +19,16 @@ export interface Participant {
   id: string;
   name: string;
   votes: Vote[];
-  submittedAt: string; // ISO timestamp
+  submittedAt: string;
+}
+
+export interface Invitee {
+  id: string;
+  name: string;
+  timeZone: string;
+  timeZoneLabel: string;
+  email: string | null;
+  note: string | null;
 }
 
 export interface Poll {
@@ -28,6 +39,7 @@ export interface Poll {
   timezone: string;
   timeslots: Timeslot[];
   participants: Participant[];
+  invitees: Invitee[];
   createdAt: string;
 }
 
@@ -36,5 +48,5 @@ export interface TimeslotTally {
   yesCount: number;
   maybeCount: number;
   noCount: number;
-  score: number; // yes=2, maybe=1, no=0
+  score: number;
 }

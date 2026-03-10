@@ -8,9 +8,17 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.next
+coverage
 dist
 dist-ssr
 *.local
+.env
+.env.*
+!.env.example
+prisma/dev.db
+prisma/dev.db-journal
+prisma/seed-data/polls.local.json
 
 # Editor directories and files
 .vscode/*

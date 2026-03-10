@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Poll {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  title        String
+  description  String
+  timezone     String
+  createdAt    DateTime      @default(now())
+  timeslots    Timeslot[]
+  participants Participant[]
+  invitees     Invitee[]
+}
+
+model Timeslot {
+  id        String @id @default(cuid())
+  pollId    String
+  poll      Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  date      String
+  startTime String
+  endTime   String
+  order     Int
+  votes     Vote[]
+
+  @@unique([pollId, order])
+}
+
+model Participant {
+  id          String   @id @default(cuid())
+  pollId      String
+  poll        Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  name        String
+  submittedAt DateTime @default(now())
+  votes       Vote[]
+
+  @@unique([pollId, name])
+}
+
+model Vote {
+  id            String      @id @default(cuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  timeslotId    String
+  timeslot      Timeslot    @relation(fields: [timeslotId], references: [id], onDelete: Cascade)
+  value         String
+
+  @@unique([participantId, timeslotId])
+}
+
+model Invitee {
+  id            String  @id @default(cuid())
+  pollId        String
+  poll          Poll    @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  name          String
+  timeZone      String  @default("America/New_York")
+  timeZoneLabel String  @default("EDT")
+  email         String?
+  note          String?
+
+  @@unique([pollId, name])
+}

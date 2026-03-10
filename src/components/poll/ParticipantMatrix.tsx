@@ -1,61 +1,176 @@
-import { Poll, VoteValue } from "@/types/poll";
-import { getVoteForSlot } from "@/lib/pollUtils";
 import { Check, HelpCircle, Minus } from "lucide-react";
+import { Poll, VoteValue } from "@/lib/poll-types";
+import { getTimeslotDisplayMeta, getVoteForSlot } from "@/lib/poll-utils";
+import { cn } from "@/lib/utils";
 
 interface ParticipantMatrixProps {
   poll: Poll;
+  sourceTimeZone: string;
+  targetTimeZone: string;
 }
 
 function VoteIcon({ value }: { value: VoteValue | undefined }) {
-  if (value === "yes") return <Check className="w-4 h-4 text-primary" />;
-  if (value === "maybe") return <HelpCircle className="w-4 h-4 text-accent-foreground" />;
-  return <Minus className="w-3.5 h-3.5 text-muted-foreground" />;
-}
+  const resolvedValue = value ?? "NO";
 
-export function ParticipantMatrix({ poll }: ParticipantMatrixProps) {
-  if (poll.participants.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground text-sm">
-        No responses yet. Be the first to vote!
-      </div>
-    );
-  }
+  const styles =
+    resolvedValue === "YES"
+      ? {
+          label: "Yes",
+          icon: <Check className="h-3.5 w-3.5" />,
+          className: "bg-emerald-100 text-emerald-700",
+        }
+      : resolvedValue === "MAYBE"
+        ? {
+            label: "Maybe",
+            icon: <HelpCircle className="h-3.5 w-3.5" />,
+            className: "bg-amber-100 text-amber-700",
+          }
+        : {
+            label: "No",
+            icon: <Minus className="h-3.5 w-3.5" />,
+            className: "bg-slate-200 text-slate-600",
+          };
 
   return (
-    <div className="overflow-x-auto -mx-1">
-      <table className="w-full text-sm">
-        <thead>
-          <tr>
-            <th className="text-left py-2 px-2 text-xs font-medium text-muted-foreground sticky left-0 bg-background">
-              Timeslot
-            </th>
-            {poll.participants.map((p) => (
-              <th
-                key={p.id}
-                className="py-2 px-2 text-xs font-medium text-muted-foreground text-center whitespace-nowrap"
-              >
-                {p.name}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {poll.timeslots.map((slot) => (
-            <tr key={slot.id} className="hover:bg-surface-hover transition-colors">
-              <td className="py-2 px-2 text-xs font-medium text-foreground sticky left-0 bg-background whitespace-nowrap">
-                {slot.label}
-              </td>
-              {poll.participants.map((p) => (
-                <td key={p.id} className="py-2 px-2 text-center">
-                  <div className="flex justify-center">
-                    <VoteIcon value={getVoteForSlot(p.votes, slot.id)} />
+    <span
+      className={cn(
+        "inline-flex min-w-[4.75rem] items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold",
+        styles.className,
+      )}
+      aria-label={styles.label}
+    >
+      {styles.icon}
+      <span>{styles.label}</span>
+    </span>
+  );
+}
+
+type DisplaySlot = {
+  id: string;
+  meta: ReturnType<typeof getTimeslotDisplayMeta>;
+};
+
+export function ParticipantMatrix({ poll, sourceTimeZone, targetTimeZone }: ParticipantMatrixProps) {
+  if (poll.participants.length === 0) {
+    return <div className="py-8 text-center text-sm text-muted-foreground">No responses yet. Be the first to vote!</div>;
+  }
+
+  const displaySlots: DisplaySlot[] = poll.timeslots.map((timeslot) => ({
+    id: timeslot.id,
+    meta: getTimeslotDisplayMeta(timeslot, sourceTimeZone, targetTimeZone),
+  }));
+
+  const weeks = Array.from(
+    displaySlots.reduce<Map<string, { weekLabel: string; slots: DisplaySlot[] }>>((map, slot) => {
+      const existing = map.get(slot.meta.weekKey);
+      if (existing) {
+        existing.slots.push(slot);
+        return map;
+      }
+
+      map.set(slot.meta.weekKey, { weekLabel: slot.meta.weekLabel, slots: [slot] });
+      return map;
+    }, new Map()),
+  );
+
+  return (
+    <div className="space-y-6">
+      {weeks.map(([weekKey, week]) => {
+        const dayEntries = Array.from(
+          week.slots.reduce<Map<string, { dayLabel: string; slots: DisplaySlot[] }>>((map, slot) => {
+            const existing = map.get(slot.meta.dayKey);
+            if (existing) {
+              existing.slots.push(slot);
+              return map;
+            }
+
+            map.set(slot.meta.dayKey, { dayLabel: slot.meta.dayLabel, slots: [slot] });
+            return map;
+          }, new Map()),
+        );
+
+        const rowKeys = Array.from(new Set(week.slots.map((slot) => slot.meta.timeKey))).sort();
+        const rowLabels = new Map(week.slots.map((slot) => [slot.meta.timeKey, slot.meta.timeRangeLabel]));
+
+        return (
+          <section key={weekKey} className="overflow-hidden rounded-xl border border-border bg-card">
+            <div className="border-b border-border bg-secondary/70 px-4 py-3">
+              <h3 className="text-sm font-semibold text-foreground">{week.weekLabel}</h3>
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full table-fixed">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="w-40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      Time
+                    </th>
+                    {dayEntries.map(([dayKey, day]) => (
+                      <th key={dayKey} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                        {day.dayLabel}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rowKeys.map((rowKey) => (
+                    <tr key={rowKey} className="align-top border-b border-border last:border-b-0">
+                      <td className="px-4 py-3 text-sm font-medium text-foreground">{rowLabels.get(rowKey)}</td>
+                      {dayEntries.map(([dayKey, day]) => {
+                        const slot = day.slots.find((entry) => entry.meta.timeKey === rowKey);
+
+                        return (
+                          <td key={dayKey} className="px-4 py-3">
+                            {slot ? (
+                              <div className="space-y-2">
+                                {poll.participants.map((participant) => (
+                                  <div key={participant.id} className="flex items-center justify-between gap-3 rounded-md bg-background/70 px-3 py-2">
+                                    <span className="truncate text-xs font-medium text-foreground">{participant.name}</span>
+                                    <VoteIcon value={getVoteForSlot(participant.votes, slot.id)} />
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="h-9" />
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="grid gap-4 p-4 md:hidden">
+              {dayEntries.map(([dayKey, day]) => (
+                <div key={dayKey} className="rounded-lg border border-border bg-background/70">
+                  <div className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">
+                    {day.dayLabel}
                   </div>
-                </td>
+                  <div className="space-y-4 p-4">
+                    {day.slots
+                      .sort((left, right) => left.meta.timeKey.localeCompare(right.meta.timeKey))
+                      .map((slot) => (
+                        <div key={slot.id} className="space-y-2">
+                          <div className="text-sm font-medium text-foreground">{slot.meta.timeRangeLabel}</div>
+                          <div className="space-y-2">
+                            {poll.participants.map((participant) => (
+                              <div key={participant.id} className="flex items-center justify-between gap-3 rounded-md bg-card px-3 py-2">
+                                <span className="truncate text-xs font-medium text-foreground">{participant.name}</span>
+                                <VoteIcon value={getVoteForSlot(participant.votes, slot.id)} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
               ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }
