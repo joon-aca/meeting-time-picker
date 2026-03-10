@@ -5,10 +5,10 @@ export default function Index() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="max-w-md text-center space-y-6 animate-fade-in">
         <h1 className="text-3xl sm:text-4xl font-bold font-display text-foreground leading-tight">
-          Find a time,<br />together.
+          ACA Board<br />Meeting Picker
         </h1>
         <p className="font-serif text-foreground/70 text-lg leading-relaxed">
-          A calm, focused way to coordinate schedules with your team. No noise, no clutter—just clarity.
+          A simple way to find the best meeting time. Pick your availability and we'll do the rest.
         </p>
         <Link
           to="/poll/team-offsite-planning"
