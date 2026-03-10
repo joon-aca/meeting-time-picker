@@ -1,5 +1,5 @@
 import { VoteValue } from "@/types/poll";
-import { Check, HelpCircle, Minus } from "lucide-react";
+import { Check, HelpCircle, X } from "lucide-react";
 
 interface VoteCellProps {
   value: VoteValue | undefined;
@@ -21,26 +21,26 @@ export function VoteCell({ value, onChange }: VoteCellProps) {
       type="button"
       onClick={handleClick}
       className={`
-        w-full h-11 rounded-md flex items-center justify-center
-        transition-colors duration-150 ease-out
+        w-full h-9 rounded-lg flex items-center justify-center
+        transition-all duration-150 ease-out
         font-medium text-sm select-none cursor-pointer
         border
         ${
           value === "yes"
-            ? "bg-vote-yes text-primary-foreground border-vote-yes"
+            ? "bg-vote-yes text-white border-vote-yes shadow-sm"
             : value === "maybe"
-            ? "bg-vote-maybe text-accent-foreground border-vote-maybe"
+            ? "bg-vote-maybe text-white border-vote-maybe shadow-sm"
             : value === "no"
-            ? "bg-vote-no text-text-secondary border-vote-no"
-            : "bg-secondary text-muted-foreground border-border hover:bg-surface-hover"
+            ? "bg-vote-no text-muted-foreground border-vote-no"
+            : "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:border-primary/50"
         }
       `}
       aria-label={value ?? "not voted"}
     >
-      {value === "yes" && <Check className="w-5 h-5" strokeWidth={2.5} />}
-      {value === "maybe" && <HelpCircle className="w-5 h-5" strokeWidth={2} />}
-      {value === "no" && <Minus className="w-4 h-4" strokeWidth={2} />}
-      {!value && <span className="text-xs tracking-wide">Vote</span>}
+      {value === "yes" && <Check className="w-4 h-4" strokeWidth={2.5} />}
+      {value === "maybe" && <HelpCircle className="w-4 h-4" strokeWidth={2} />}
+      {value === "no" && <X className="w-3.5 h-3.5" strokeWidth={2} />}
+      {!value && <span className="text-xs font-semibold tracking-wide">Vote</span>}
     </button>
   );
 }

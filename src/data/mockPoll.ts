@@ -3,9 +3,9 @@ import { Poll } from "@/types/poll";
 export const mockPoll: Poll = {
   id: "poll-001",
   slug: "team-offsite-planning",
-  title: "Team Offsite Planning",
+  title: "ACA Board Meeting Picker",
   description:
-    "Let's find the best time for our spring offsite. We're looking at a few options across the last two weeks of March. Please mark your availability so we can finalize the date.",
+    "Help us find the best time for the next ACA board meeting. Review the proposed dates below and mark your availability so we can finalize the schedule.",
   timezone: "America/New_York (EST)",
   createdAt: "2026-03-01T10:00:00Z",
   timeslots: [

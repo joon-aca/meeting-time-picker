@@ -59,6 +59,7 @@ export default {
         "vote-no": "hsl(var(--vote-no))",
         "vote-maybe": "hsl(var(--vote-maybe))",
         "vote-yes": "hsl(var(--vote-yes))",
+        "vote-unset": "hsl(var(--vote-unset))",
         "text-secondary": "hsl(var(--text-secondary))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
