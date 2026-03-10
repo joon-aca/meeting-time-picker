@@ -1,14 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Link } from "react-router-dom";
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="max-w-md text-center space-y-6 animate-fade-in">
+        <h1 className="text-3xl sm:text-4xl font-bold font-display text-foreground leading-tight">
+          Find a time,<br />together.
+        </h1>
+        <p className="font-serif text-foreground/70 text-lg leading-relaxed">
+          A calm, focused way to coordinate schedules with your team. No noise, no clutter—just clarity.
+        </p>
+        <Link
+          to="/poll/team-offsite-planning"
+          className="inline-block px-6 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
+        >
+          View Demo Poll
+        </Link>
       </div>
     </div>
   );
-};
-
-export default Index;
+}
