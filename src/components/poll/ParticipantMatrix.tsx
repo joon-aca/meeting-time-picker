@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Check, HelpCircle, Minus } from "lucide-react";
 import { Poll, VoteValue } from "@/lib/poll-types";
 import { getTimeslotDisplayMeta, getVoteForSlot } from "@/lib/poll-utils";
@@ -7,6 +8,7 @@ interface ParticipantMatrixProps {
   poll: Poll;
   sourceTimeZone: string;
   targetTimeZone: string;
+  forceShowAllWeeks?: boolean;
 }
 
 function VoteIcon({ value }: { value: VoteValue | undefined }) {
@@ -50,10 +52,13 @@ type DisplaySlot = {
   meta: ReturnType<typeof getTimeslotDisplayMeta>;
 };
 
-export function ParticipantMatrix({ poll, sourceTimeZone, targetTimeZone }: ParticipantMatrixProps) {
-  if (poll.participants.length === 0) {
-    return <div className="py-8 text-center text-sm text-muted-foreground">No responses yet. Be the first to vote!</div>;
-  }
+export function ParticipantMatrix({
+  poll,
+  sourceTimeZone,
+  targetTimeZone,
+  forceShowAllWeeks = false,
+}: ParticipantMatrixProps) {
+  const [showAllWeeks, setShowAllWeeks] = useState(forceShowAllWeeks);
 
   const displaySlots: DisplaySlot[] = poll.timeslots.map((timeslot) => ({
     id: timeslot.id,
@@ -72,10 +77,22 @@ export function ParticipantMatrix({ poll, sourceTimeZone, targetTimeZone }: Part
       return map;
     }, new Map()),
   );
+  const visibleWeeks = forceShowAllWeeks || showAllWeeks ? weeks : weeks.slice(0, 1);
+  const hiddenWeek = weeks[1];
+
+  useEffect(() => {
+    if (forceShowAllWeeks) {
+      setShowAllWeeks(true);
+    }
+  }, [forceShowAllWeeks]);
+
+  if (poll.participants.length === 0) {
+    return <div className="py-8 text-center text-sm text-muted-foreground">No responses yet. Be the first to vote!</div>;
+  }
 
   return (
     <div className="space-y-6">
-      {weeks.map(([weekKey, week]) => {
+      {visibleWeeks.map(([weekKey, week]) => {
         const dayEntries = Array.from(
           week.slots.reduce<Map<string, { dayLabel: string; slots: DisplaySlot[] }>>((map, slot) => {
             const existing = map.get(slot.meta.dayKey);
@@ -171,6 +188,26 @@ export function ParticipantMatrix({ poll, sourceTimeZone, targetTimeZone }: Part
           </section>
         );
       })}
+
+      {!forceShowAllWeeks && !showAllWeeks && hiddenWeek ? (
+        <div className="rounded-xl border border-dashed border-border bg-secondary/50 px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Need to compare week two?</p>
+              <p className="text-xs text-muted-foreground">
+                Show {hiddenWeek[1].weekLabel} in the response grid if the first week is not enough.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAllWeeks(true)}
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-card"
+            >
+              Show {hiddenWeek[1].weekLabel}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

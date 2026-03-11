@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { participantPayloadSchema } from "@/lib/poll-schemas";
 import { Poll, Vote } from "@/lib/poll-types";
+import { verifyInviteToken } from "@/lib/invite-tokens";
 import { formatTimeslotLabel, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
 
 const pollInclude = {
@@ -181,6 +182,14 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
   const invalidIds = submittedTimeslotIds.filter((timeslotId) => !expectedTimeslotIds.includes(timeslotId));
   if (invalidIds.length > 0) {
     throw new Error("One or more submitted votes are invalid");
+  }
+
+  if (payload.inviteToken) {
+    const inviteeName = verifyInviteToken(slug, payload.inviteToken);
+
+    if (!inviteeName || inviteeName !== payload.name) {
+      throw new Error("Invalid invite token");
+    }
   }
 
   const normalizedVotes = expectedTimeslotIds.map((timeslotId) => ({

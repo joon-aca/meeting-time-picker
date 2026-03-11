@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "deploy:plan": "node scripts/generate-deploy-config.mjs",
+    "invite:links": "node scripts/generate-invite-links.mjs",
     "prisma:generate": "prisma generate",
     "prisma:seed": "tsx prisma/seed.ts",
     "test": "vitest run",

@@ -58,9 +58,36 @@ Local development uses [`.env.example`](/Users/joon/dev/github/meeting-time-pick
 
 ```env
 DATABASE_URL="file:./dev.db"
+INVITEE_TOKEN_SECRET="replace-with-a-long-random-secret"
 ```
 
 The Prisma datasource is configured in [prisma/schema.prisma](/Users/joon/dev/github/meeting-time-picker/prisma/schema.prisma).
+
+## Invite links
+
+The app supports deterministic signed invite links.
+
+Format:
+
+- the invitee name is encoded into the token
+- the token is signed with `INVITEE_TOKEN_SECRET`
+- the token is deterministic for the same `poll slug + exact invitee name + secret`
+
+This is not login-grade auth, but it is materially better than relying on a public name dropdown.
+
+Behavior:
+
+- a valid invite link locks the page to that invitee
+- the invitee picker is replaced with a secure invite card
+- saves are rejected if the token does not match the submitted invitee name
+
+Generate invite links with:
+
+```bash
+npm run invite:links -- --base-url https://polls.example.com
+```
+
+The script automatically prefers `prisma/seed-data/polls.local.json` when present.
 
 ## Simple server deploy behind Caddy
 
@@ -170,5 +197,6 @@ WantedBy=multi-user.target
 - Seed script: [prisma/seed.ts](/Users/joon/dev/github/meeting-time-picker/prisma/seed.ts)
 - Sample seed JSON: [prisma/seed-data/polls.json](/Users/joon/dev/github/meeting-time-picker/prisma/seed-data/polls.json)
 - Deploy helper: [scripts/generate-deploy-config.mjs](/Users/joon/dev/github/meeting-time-picker/scripts/generate-deploy-config.mjs)
+- Invite link generator: [scripts/generate-invite-links.mjs](/Users/joon/dev/github/meeting-time-picker/scripts/generate-invite-links.mjs)
 - Poll page: [src/app/poll/[slug]/page.tsx](/Users/joon/dev/github/meeting-time-picker/src/app/poll/[slug]/page.tsx)
 - Poll API: [src/app/api/polls/[slug]/participant/route.ts](/Users/joon/dev/github/meeting-time-picker/src/app/api/polls/[slug]/participant/route.ts)

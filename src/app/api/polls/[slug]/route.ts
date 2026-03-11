@@ -6,8 +6,8 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
   const poll = await getPollBySlug(slug);
 
   if (!poll) {
-    return NextResponse.json({ error: "Poll not found" }, { status: 404 });
+    return NextResponse.json({ error: "Poll not found" }, { status: 404, headers: { "Cache-Control": "no-store" } });
   }
 
-  return NextResponse.json({ poll });
+  return NextResponse.json({ poll }, { headers: { "Cache-Control": "no-store" } });
 }

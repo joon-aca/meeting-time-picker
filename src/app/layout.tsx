@@ -4,6 +4,10 @@ import "@/app/globals.css";
 export const metadata: Metadata = {
   title: "Meeting Time Picker",
   description: "Scheduling poll for the ACA board meeting.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

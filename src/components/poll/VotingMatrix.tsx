@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { VoteCell } from "@/components/poll/VoteCell";
 import { Timeslot, Vote, VoteValue } from "@/lib/poll-types";
 import { getTimeslotDisplayMeta, getVoteForSlot } from "@/lib/poll-utils";
@@ -9,6 +10,7 @@ interface VotingMatrixProps {
   disabled?: boolean;
   sourceTimeZone: string;
   targetTimeZone: string;
+  forceShowAllWeeks?: boolean;
 }
 
 type DisplaySlot = {
@@ -23,7 +25,9 @@ export function VotingMatrix({
   disabled,
   sourceTimeZone,
   targetTimeZone,
+  forceShowAllWeeks = false,
 }: VotingMatrixProps) {
+  const [showAllWeeks, setShowAllWeeks] = useState(forceShowAllWeeks);
   const displaySlots: DisplaySlot[] = timeslots.map((timeslot) => ({
     timeslot,
     meta: getTimeslotDisplayMeta(timeslot, sourceTimeZone, targetTimeZone),
@@ -41,10 +45,18 @@ export function VotingMatrix({
       return map;
     }, new Map()),
   );
+  const visibleWeeks = forceShowAllWeeks || showAllWeeks ? weeks : weeks.slice(0, 1);
+  const hiddenWeek = weeks[1];
+
+  useEffect(() => {
+    if (forceShowAllWeeks) {
+      setShowAllWeeks(true);
+    }
+  }, [forceShowAllWeeks]);
 
   return (
     <div className="space-y-6">
-      {weeks.map(([weekKey, week]) => {
+      {visibleWeeks.map(([weekKey, week]) => {
         const dayEntries = Array.from(
           week.slots.reduce<Map<string, { dayLabel: string; slots: DisplaySlot[] }>>((map, slot) => {
             const existing = map.get(slot.meta.dayKey);
@@ -146,6 +158,26 @@ export function VotingMatrix({
           </section>
         );
       })}
+
+      {!forceShowAllWeeks && !showAllWeeks && hiddenWeek ? (
+        <div className="rounded-xl border border-dashed border-border bg-secondary/50 px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Need more options?</p>
+              <p className="text-xs text-muted-foreground">
+                Show {hiddenWeek[1].weekLabel} if the first week does not work for you.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAllWeeks(true)}
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-card"
+            >
+              Show {hiddenWeek[1].weekLabel}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

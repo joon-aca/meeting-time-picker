@@ -18,16 +18,19 @@ import {
   SelectSeparator,
   SelectTrigger,
 } from "@/components/ui/select";
-import { getTimeZoneDisplayLabel } from "@/lib/poll-utils";
+import { getTimeslotDisplayMeta, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
 
 interface PollPageClientProps {
   initialPoll: Poll;
+  lockedInviteeName: string | null;
+  inviteToken: string | null;
+  inviteTokenStatus: "none" | "valid" | "invalid";
 }
 
 type PollPageState = "idle" | "loading" | "loaded" | "submitting" | "success" | "error";
 type Feedback = { kind: "success" | "info" | "error"; message: string } | null;
 
-export function PollPageClient({ initialPoll }: PollPageClientProps) {
+export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken, inviteTokenStatus }: PollPageClientProps) {
   const [poll, setPoll] = useState(initialPoll);
   const [state, setState] = useState<PollPageState>("idle");
   const [participantName, setParticipantName] = useState("");
@@ -41,6 +44,7 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
   const storageKey = `meeting-time-picker:selected-name:v2:${poll.slug}`;
   const legacyStorageKey = `meeting-time-picker:selected-name:${poll.slug}`;
   const normalizedName = participantName.trim();
+  const hasLockedInvitee = Boolean(lockedInviteeName);
   const matchedInvitee = poll.invitees.find((invitee) => invitee.name === normalizedName);
   const activeTimeZone = matchedInvitee?.timeZone ?? poll.timezone;
   const activeTimeZoneLabel =
@@ -68,6 +72,39 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
     () => sortedInvitees.filter((invitee) => poll.participants.some((participant) => participant.name === invitee.name)),
     [poll.participants, sortedInvitees],
   );
+  const weekSlotIds = useMemo(() => {
+    const groupedWeeks = Array.from(
+      poll.timeslots.reduce<Map<string, string[]>>((map, timeslot) => {
+        const { weekKey } = getTimeslotDisplayMeta(timeslot, poll.timezone, poll.timezone);
+        const existing = map.get(weekKey);
+
+        if (existing) {
+          existing.push(timeslot.id);
+          return map;
+        }
+
+        map.set(weekKey, [timeslot.id]);
+        return map;
+      }, new Map()),
+    );
+
+    return groupedWeeks.map(([, slotIds]) => slotIds);
+  }, [poll.timeslots, poll.timezone]);
+  const shouldAlwaysShowSecondWeek = useMemo(() => {
+    const [firstWeekSlotIds, secondWeekSlotIds] = weekSlotIds;
+
+    if (!firstWeekSlotIds || !secondWeekSlotIds) {
+      return false;
+    }
+
+    return poll.participants.some((participant) => {
+      const participantVoteMap = new Map(participant.votes.map((vote) => [vote.timeslotId, vote.value]));
+      const hasFirstWeekYes = firstWeekSlotIds.some((timeslotId) => participantVoteMap.get(timeslotId) === "YES");
+      const hasSecondWeekYes = secondWeekSlotIds.some((timeslotId) => participantVoteMap.get(timeslotId) === "YES");
+
+      return !hasFirstWeekYes && hasSecondWeekYes;
+    });
+  }, [poll.participants, weekSlotIds]);
 
   const handleVoteChange = (timeslotId: string, value: VoteValue) => {
     setVotes((previous) => {
@@ -102,6 +139,10 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
   }, [poll.participants]);
 
   const handleParticipantSelection = (selectedName: string) => {
+    if (hasLockedInvitee) {
+      return;
+    }
+
     setParticipantName(selectedName);
     setNameError("");
     setFeedback(null);
@@ -125,6 +166,13 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
   };
 
   useEffect(() => {
+    if (hasLockedInvitee && lockedInviteeName) {
+      setParticipantName(lockedInviteeName);
+      hydrateParticipantSelection(lockedInviteeName);
+      setHasInitializedSelection(true);
+      return;
+    }
+
     if (hasInitializedSelection || typeof window === "undefined") {
       return;
     }
@@ -137,7 +185,7 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
     }
 
     setHasInitializedSelection(true);
-  }, [hasInitializedSelection, hydrateParticipantSelection, legacyStorageKey, poll.invitees, storageKey]);
+  }, [hasInitializedSelection, hasLockedInvitee, hydrateParticipantSelection, legacyStorageKey, lockedInviteeName, poll.invitees, storageKey]);
 
   const handleSubmit = async () => {
     const trimmedName = participantName.trim();
@@ -164,6 +212,7 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
         },
         body: JSON.stringify({
           name: trimmedName,
+          inviteToken: inviteToken ?? undefined,
           votes: poll.timeslots.map((timeslot) => ({
             timeslotId: timeslot.id,
             value: votes.find((vote) => vote.timeslotId === timeslot.id)?.value ?? "NO",
@@ -213,54 +262,44 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
 
           <div className="space-y-3">
             <div>
-              <Select
-                value={participantName || undefined}
-                onValueChange={(value) => {
-                  handleParticipantSelection(value);
-                }}
-                disabled={state === "submitting"}
-              >
-                <SelectTrigger className="h-11 w-full rounded-lg bg-card sm:w-80">
-                  {matchedInvitee ? (
-                    <div className="flex min-w-0 flex-1 items-center justify-between gap-3 pr-4 text-left">
-                      <span className="truncate text-foreground">{matchedInvitee.name}</span>
-                      <span className="flex-shrink-0 text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                        {matchedInvitee.timeZoneLabel}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="text-muted-foreground">&lt;Please Select&gt;</div>
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  {unsubmittedInvitees.length > 0 ? (
-                    <SelectGroup>
-                      <SelectLabel>Available To Pick</SelectLabel>
-                      {unsubmittedInvitees.map((invitee) => (
-                        <SelectItem key={invitee.id} value={invitee.name}>
-                          <span className="flex w-full items-center justify-between gap-3 pr-4">
-                            <span>{invitee.name}</span>
-                            <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                              {invitee.timeZoneLabel}
-                            </span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ) : null}
-
-                  {submittedInvitees.length > 0 ? (
-                    <>
-                      {unsubmittedInvitees.length > 0 ? <SelectSeparator /> : null}
+              {hasLockedInvitee && matchedInvitee ? (
+                <div className="w-full rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 sm:w-80">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Secure Invite Link</p>
+                  <div className="mt-1 flex min-w-0 items-center justify-between gap-3 text-left">
+                    <span className="truncate font-medium text-foreground">{matchedInvitee.name}</span>
+                    <span className="flex-shrink-0 text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                      {matchedInvitee.timeZoneLabel}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <Select
+                  value={participantName || undefined}
+                  onValueChange={(value) => {
+                    handleParticipantSelection(value);
+                  }}
+                  disabled={state === "submitting"}
+                >
+                  <SelectTrigger className="h-11 w-full rounded-lg bg-card sm:w-80">
+                    {matchedInvitee ? (
+                      <div className="flex min-w-0 flex-1 items-center justify-between gap-3 pr-4 text-left">
+                        <span className="truncate text-foreground">{matchedInvitee.name}</span>
+                        <span className="flex-shrink-0 text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                          {matchedInvitee.timeZoneLabel}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">&lt;Please Select&gt;</div>
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {unsubmittedInvitees.length > 0 ? (
                       <SelectGroup>
-                        <SelectLabel>Already Selected</SelectLabel>
-                        {submittedInvitees.map((invitee) => (
+                        <SelectLabel>Available To Pick</SelectLabel>
+                        {unsubmittedInvitees.map((invitee) => (
                           <SelectItem key={invitee.id} value={invitee.name}>
                             <span className="flex w-full items-center justify-between gap-3 pr-4">
-                              <span className="flex items-center gap-2">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                                <span>{invitee.name}</span>
-                              </span>
+                              <span>{invitee.name}</span>
                               <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
                                 {invitee.timeZoneLabel}
                               </span>
@@ -268,11 +307,36 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
                           </SelectItem>
                         ))}
                       </SelectGroup>
-                    </>
-                  ) : null}
-                </SelectContent>
-              </Select>
+                    ) : null}
+
+                    {submittedInvitees.length > 0 ? (
+                      <>
+                        {unsubmittedInvitees.length > 0 ? <SelectSeparator /> : null}
+                        <SelectGroup>
+                          <SelectLabel>Already Selected</SelectLabel>
+                          {submittedInvitees.map((invitee) => (
+                            <SelectItem key={invitee.id} value={invitee.name}>
+                              <span className="flex w-full items-center justify-between gap-3 pr-4">
+                                <span className="flex items-center gap-2">
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                                  <span>{invitee.name}</span>
+                                </span>
+                                <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                                  {invitee.timeZoneLabel}
+                                </span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </>
+                    ) : null}
+                  </SelectContent>
+                </Select>
+              )}
               {nameError ? <p className="mt-1.5 text-xs text-destructive animate-fade-in">{nameError}</p> : null}
+              {inviteTokenStatus === "invalid" ? (
+                <p className="mt-1.5 text-xs text-destructive">This invite link is invalid. Please use the name picker instead.</p>
+              ) : null}
             </div>
           </div>
 
@@ -344,6 +408,7 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
                 disabled={state === "submitting"}
                 sourceTimeZone={poll.timezone}
                 targetTimeZone={activeTimeZone}
+                forceShowAllWeeks={shouldAlwaysShowSecondWeek}
               />
 
               <button
@@ -373,7 +438,12 @@ export function PollPageClient({ initialPoll }: PollPageClientProps) {
 
           <div>
             <SectionLabel>All Responses</SectionLabel>
-            <ParticipantMatrix poll={poll} sourceTimeZone={poll.timezone} targetTimeZone={activeTimeZone} />
+            <ParticipantMatrix
+              poll={poll}
+              sourceTimeZone={poll.timezone}
+              targetTimeZone={activeTimeZone}
+              forceShowAllWeeks={shouldAlwaysShowSecondWeek}
+            />
           </div>
         </div>
       </div>
