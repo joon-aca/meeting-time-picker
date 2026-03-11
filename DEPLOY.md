@@ -99,6 +99,24 @@ cp prisma/seed-data/polls.json prisma/seed-data/polls.local.json
 
 Then edit `polls.local.json` with your actual invitees.
 
+Invitees support an optional `isAdmin` flag.
+
+Example:
+
+```json
+{
+  "name": "Joon",
+  "isAdmin": true,
+  "timeZone": "America/Los_Angeles",
+  "timeZoneLabel": "PDT"
+}
+```
+
+Notes:
+
+- omit `isAdmin` or set it to `false` for normal invitees
+- an invitee with `isAdmin: true` gets an invite link that can edit any participant
+
 ## Pick a Port
 
 Use the helper to choose a free high port and print matching config:
@@ -194,9 +212,16 @@ When a valid token is present:
 - the normal name picker is replaced by a secure invite card
 - saves must include a valid matching token
 
+When the invitee is marked `isAdmin: true`:
+
+- the invite link opens admin mode instead of locking to one person
+- the picker stays available
+- that admin can load and update any invitee's responses
+
 When a token is invalid:
 
-- the page falls back to the picker
+- the page stays locked
+- the token entry screen is shown
 - save requests with that bad token are rejected
 
 ## Troubleshooting

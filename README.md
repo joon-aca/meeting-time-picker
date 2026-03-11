@@ -30,6 +30,21 @@ Private local data can live in:
 
 That file is gitignored and automatically preferred by `npm run prisma:seed`.
 
+Invitees support an optional `isAdmin` flag.
+
+Example:
+
+```json
+{
+  "name": "Joon",
+  "isAdmin": true,
+  "timeZone": "America/Los_Angeles",
+  "timeZoneLabel": "PDT"
+}
+```
+
+If `isAdmin` is omitted, it defaults to `false`.
+
 ## Local setup
 
 ```bash
@@ -67,6 +82,12 @@ If a valid invite link is used:
 - the page locks to that person
 - the normal picker is replaced by a fixed invite card
 - saves must include a matching invite token
+
+If the invitee has `"isAdmin": true` in the seed JSON:
+
+- that invite link unlocks admin mode
+- the picker stays available
+- that person can load and edit any invitee's responses
 
 ## Deploy
 
