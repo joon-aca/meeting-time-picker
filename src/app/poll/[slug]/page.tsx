@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { PollPageClient } from "@/components/poll/PollPageClient";
-import { verifyInviteToken } from "@/lib/invite-tokens";
+import { SecurePollAccess } from "@/components/poll/SecurePollAccess";
+import { resolveInviteeNameFromToken } from "@/lib/invite-tokens";
 import { getPollBySlug } from "@/lib/polls";
+import { getTimeZoneDisplayLabel } from "@/lib/poll-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -20,16 +22,26 @@ export default async function PollPage({
     notFound();
   }
 
-  const tokenName = invite ? verifyInviteToken(slug, invite) : null;
+  const tokenName = invite ? resolveInviteeNameFromToken(slug, invite, poll.invitees.map((invitee) => invitee.name)) : null;
   const lockedInvitee = tokenName ? poll.invitees.find((invitee) => invitee.name === tokenName) : null;
   const inviteTokenStatus = !invite ? "none" : lockedInvitee ? "valid" : "invalid";
+
+  if (inviteTokenStatus !== "valid") {
+    return (
+      <SecurePollAccess
+        title={poll.title}
+        description={poll.description}
+        timezone={getTimeZoneDisplayLabel(poll.timezone, poll.timeslots[0]?.date, poll.timeslots[0]?.startTime)}
+        status={inviteTokenStatus}
+      />
+    );
+  }
 
   return (
     <PollPageClient
       initialPoll={poll}
       lockedInviteeName={lockedInvitee?.name ?? null}
       inviteToken={lockedInvitee ? invite ?? null : null}
-      inviteTokenStatus={inviteTokenStatus}
     />
   );
 }

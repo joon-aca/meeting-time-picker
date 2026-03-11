@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { participantPayloadSchema } from "@/lib/poll-schemas";
 import { Poll, Vote } from "@/lib/poll-types";
-import { verifyInviteToken } from "@/lib/invite-tokens";
+import { verifyInviteTokenForName } from "@/lib/invite-tokens";
 import { formatTimeslotLabel, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
 
 const pollInclude = {
@@ -185,9 +185,7 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
   }
 
   if (payload.inviteToken) {
-    const inviteeName = verifyInviteToken(slug, payload.inviteToken);
-
-    if (!inviteeName || inviteeName !== payload.name) {
+    if (!verifyInviteTokenForName(slug, payload.name, payload.inviteToken)) {
       throw new Error("Invalid invite token");
     }
   }

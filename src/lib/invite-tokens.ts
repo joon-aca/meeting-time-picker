@@ -1,59 +1,78 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 
-function getInviteTokenSecret() {
-  const secret = process.env.INVITEE_TOKEN_SECRET?.trim();
-  return secret && secret.length > 0 ? secret : null;
+const CROCKFORD_BASE32_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const TOKEN_SUFFIX_LENGTH = 6;
+
+function normalizeInviteeName(name: string) {
+  return name
+    .normalize("NFKD")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "")
+    .toUpperCase();
 }
 
-function signInvitePayload(slug: string, encodedName: string, secret: string) {
-  return createHmac("sha256", secret).update(`${slug}:${encodedName}`).digest("base64url");
+function encodeCrockfordBase32(bytes: Uint8Array) {
+  let bits = 0;
+  let value = 0;
+  let output = "";
+
+  for (const byte of bytes) {
+    value = (value << 8) | byte;
+    bits += 8;
+
+    while (bits >= 5) {
+      output += CROCKFORD_BASE32_ALPHABET[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+
+  if (bits > 0) {
+    output += CROCKFORD_BASE32_ALPHABET[(value << (5 - bits)) & 31];
+  }
+
+  return output;
 }
 
-export function canUseInviteTokens() {
-  return Boolean(getInviteTokenSecret());
+function getInviteTokenSuffix(slug: string, publicId: string) {
+  const digest = createHash("sha256").update(`${slug}:${publicId}`).digest();
+  return encodeCrockfordBase32(digest).slice(0, TOKEN_SUFFIX_LENGTH);
+}
+
+export function getInvitePublicId(name: string) {
+  const publicId = normalizeInviteeName(name);
+
+  if (!publicId) {
+    throw new Error("Invitee name must contain at least one letter or number");
+  }
+
+  return publicId;
 }
 
 export function createInviteToken(slug: string, name: string) {
-  const secret = getInviteTokenSecret();
-
-  if (!secret) {
-    throw new Error("INVITEE_TOKEN_SECRET is not configured");
-  }
-
-  const encodedName = Buffer.from(name, "utf8").toString("base64url");
-  const signature = signInvitePayload(slug, encodedName, secret);
-
-  return `v1.${encodedName}.${signature}`;
+  const publicId = getInvitePublicId(name);
+  return `${publicId}${getInviteTokenSuffix(slug, publicId)}`;
 }
 
-export function verifyInviteToken(slug: string, token: string): string | null {
-  const secret = getInviteTokenSecret();
+export function verifyInviteTokenForName(slug: string, name: string, token: string) {
+  const expectedToken = createInviteToken(slug, name);
+  const normalizedToken = token.trim().toUpperCase();
+  const expectedBuffer = Buffer.from(expectedToken);
+  const providedBuffer = Buffer.from(normalizedToken);
 
-  if (!secret) {
-    return null;
+  if (expectedBuffer.length !== providedBuffer.length) {
+    return false;
   }
 
-  const parts = token.split(".");
-  if (parts.length !== 3 || parts[0] !== "v1") {
-    return null;
+  return timingSafeEqual(expectedBuffer, providedBuffer);
+}
+
+export function resolveInviteeNameFromToken(slug: string, token: string, inviteeNames: string[]) {
+  const normalizedToken = token.trim().toUpperCase();
+
+  for (const inviteeName of inviteeNames) {
+    if (verifyInviteTokenForName(slug, inviteeName, normalizedToken)) {
+      return inviteeName;
+    }
   }
 
-  const [, encodedName, providedSignature] = parts;
-  const expectedSignature = signInvitePayload(slug, encodedName, secret);
-  const providedBuffer = Buffer.from(providedSignature);
-  const expectedBuffer = Buffer.from(expectedSignature);
-
-  if (providedBuffer.length !== expectedBuffer.length) {
-    return null;
-  }
-
-  if (!timingSafeEqual(providedBuffer, expectedBuffer)) {
-    return null;
-  }
-
-  try {
-    return Buffer.from(encodedName, "base64url").toString("utf8");
-  } catch {
-    return null;
-  }
+  return null;
 }

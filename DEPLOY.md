@@ -42,20 +42,12 @@ Create `.env` on the server:
 
 ```env
 DATABASE_URL="file:/srv/meeting-time-picker/prisma/prod.db"
-INVITEE_TOKEN_SECRET="replace-with-a-long-random-secret"
 ```
 
 Notes:
 
-- `INVITEE_TOKEN_SECRET` must be stable
-- if you change the secret later, all previously generated invite links stop working
-- use a long random string, not a human phrase
-
-Example secret generation:
-
-```bash
-openssl rand -base64 48
-```
+- no token secret is required for the current invite-link scheme
+- invite links are lightweight gates, not strong authentication
 
 ## Initial Deploy
 
@@ -155,7 +147,6 @@ WorkingDirectory=/srv/meeting-time-picker
 Environment=NODE_ENV=production
 Environment=PORT=43173
 Environment=DATABASE_URL=file:/srv/meeting-time-picker/prisma/prod.db
-Environment=INVITEE_TOKEN_SECRET=replace-with-a-long-random-secret
 ExecStart=/usr/bin/npm run start
 Restart=always
 RestartSec=5
@@ -167,14 +158,15 @@ WantedBy=multi-user.target
 
 ## Invite Link Generation
 
-Invite links are deterministic signed tokens.
+Invite links are deterministic human-friendly tokens.
 
 What that means:
 
-- token is derived from `poll slug + exact invitee name + secret`
+- token is derived from `poll slug + exact invitee name`
 - no DB token table is required
-- same input and same secret produce the same token
-- token is name-bound and signature-checked on save
+- token is short enough to be human-readable
+- token is prefixed by a readable user id derived from the invitee name
+- token is name-bound and checked on save
 
 Generate links with:
 
@@ -184,7 +176,6 @@ npm run invite:links -- --base-url https://polls.example.com
 
 The script reads:
 
-- `INVITEE_TOKEN_SECRET` from `.env`
 - invitees from `polls.local.json` if present
 - otherwise from `polls.json`
 
@@ -192,7 +183,7 @@ Output looks like:
 
 ```text
 Raj
-https://polls.example.com/poll/aca-board-meeting-picker?invite=v1....
+https://polls.example.com/poll/aca-board-meeting-picker?invite=RAJ7K3M2P
 ```
 
 ## Invite Link Behavior
@@ -214,7 +205,6 @@ When a token is invalid:
 
 Most likely causes:
 
-- `INVITEE_TOKEN_SECRET` changed
 - invitee name in the seed changed
 - poll slug changed
 - link was generated from different seed data than the server is using
@@ -222,11 +212,10 @@ Most likely causes:
 Check:
 
 ```bash
-cat .env
 npm run invite:links -- --base-url https://polls.example.com
 ```
 
-If the secret or exact invitee names changed, regenerate all links.
+If the exact invitee names or slug changed, regenerate all links.
 
 ### Token says invalid
 
@@ -234,7 +223,6 @@ Check:
 
 - exact invitee name in seed file
 - current poll slug
-- current `INVITEE_TOKEN_SECRET`
 - whether the server is using `polls.local.json` or `polls.json`
 
 Remember:

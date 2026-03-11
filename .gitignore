@@ -30,3 +30,5 @@ prisma/seed-data/polls.local.json
 *.njsproj
 *.sln
 *.sw?
+
+INVITES.private.md

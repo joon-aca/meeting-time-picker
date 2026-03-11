@@ -24,13 +24,12 @@ interface PollPageClientProps {
   initialPoll: Poll;
   lockedInviteeName: string | null;
   inviteToken: string | null;
-  inviteTokenStatus: "none" | "valid" | "invalid";
 }
 
 type PollPageState = "idle" | "loading" | "loaded" | "submitting" | "success" | "error";
 type Feedback = { kind: "success" | "info" | "error"; message: string } | null;
 
-export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken, inviteTokenStatus }: PollPageClientProps) {
+export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken }: PollPageClientProps) {
   const [poll, setPoll] = useState(initialPoll);
   const [state, setState] = useState<PollPageState>("idle");
   const [participantName, setParticipantName] = useState("");
@@ -334,9 +333,6 @@ export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken, in
                 </Select>
               )}
               {nameError ? <p className="mt-1.5 text-xs text-destructive animate-fade-in">{nameError}</p> : null}
-              {inviteTokenStatus === "invalid" ? (
-                <p className="mt-1.5 text-xs text-destructive">This invite link is invalid. Please use the name picker instead.</p>
-              ) : null}
             </div>
           </div>
 
