@@ -2,6 +2,13 @@ import { createHash, timingSafeEqual } from "node:crypto";
 
 const CROCKFORD_BASE32_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const TOKEN_SUFFIX_LENGTH = 6;
+const ADMIN_INVITEE_PUBLIC_IDS = new Set(["JOON"]);
+
+function getInviteDisplayId(name: string) {
+  return name
+    .normalize("NFKD")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "");
+}
 
 function normalizeInviteeName(name: string) {
   return name
@@ -45,6 +52,10 @@ export function getInvitePublicId(name: string) {
   }
 
   return publicId;
+}
+
+export function isAdminInviteeName(name: string) {
+  return ADMIN_INVITEE_PUBLIC_IDS.has(getInvitePublicId(name));
 }
 
 export function createInviteToken(slug: string, name: string) {

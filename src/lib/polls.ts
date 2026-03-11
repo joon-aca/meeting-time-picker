@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { participantPayloadSchema } from "@/lib/poll-schemas";
 import { Poll, Vote } from "@/lib/poll-types";
-import { verifyInviteTokenForName } from "@/lib/invite-tokens";
+import { isAdminInviteeName, resolveInviteeNameFromToken } from "@/lib/invite-tokens";
 import { formatTimeslotLabel, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
 
 const pollInclude = {
@@ -164,6 +164,11 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
           order: "asc",
         },
       },
+      invitees: {
+        orderBy: {
+          name: "asc",
+        },
+      },
     },
   });
 
@@ -184,9 +189,21 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
     throw new Error("One or more submitted votes are invalid");
   }
 
+  const inviteeNames = poll.invitees.map((invitee) => invitee.name);
+
+  if (!inviteeNames.includes(payload.name)) {
+    throw new Error("Selected participant is not part of this poll");
+  }
+
   if (payload.inviteToken) {
-    if (!verifyInviteTokenForName(slug, payload.name, payload.inviteToken)) {
+    const inviteeNameFromToken = resolveInviteeNameFromToken(slug, payload.inviteToken, inviteeNames);
+
+    if (!inviteeNameFromToken) {
       throw new Error("Invalid invite token");
+    }
+
+    if (!isAdminInviteeName(inviteeNameFromToken) && inviteeNameFromToken !== payload.name) {
+      throw new Error("This invite link cannot update another participant");
     }
   }
 

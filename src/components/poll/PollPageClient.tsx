@@ -23,13 +23,14 @@ import { getTimeslotDisplayMeta, getTimeZoneDisplayLabel } from "@/lib/poll-util
 interface PollPageClientProps {
   initialPoll: Poll;
   lockedInviteeName: string | null;
+  adminInviteeName: string | null;
   inviteToken: string | null;
 }
 
 type PollPageState = "idle" | "loading" | "loaded" | "submitting" | "success" | "error";
 type Feedback = { kind: "success" | "info" | "error"; message: string } | null;
 
-export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken }: PollPageClientProps) {
+export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeName, inviteToken }: PollPageClientProps) {
   const [poll, setPoll] = useState(initialPoll);
   const [state, setState] = useState<PollPageState>("idle");
   const [participantName, setParticipantName] = useState("");
@@ -44,6 +45,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken }: 
   const legacyStorageKey = `meeting-time-picker:selected-name:${poll.slug}`;
   const normalizedName = participantName.trim();
   const hasLockedInvitee = Boolean(lockedInviteeName);
+  const hasAdminInvitee = Boolean(adminInviteeName);
   const matchedInvitee = poll.invitees.find((invitee) => invitee.name === normalizedName);
   const activeTimeZone = matchedInvitee?.timeZone ?? poll.timezone;
   const activeTimeZoneLabel =
@@ -146,7 +148,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken }: 
     setNameError("");
     setFeedback(null);
 
-    if (typeof window !== "undefined") {
+    if (!hasAdminInvitee && typeof window !== "undefined") {
       if (selectedName) {
         window.localStorage.setItem(storageKey, selectedName);
       } else {
@@ -173,6 +175,13 @@ export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken }: 
     }
 
     if (hasInitializedSelection || typeof window === "undefined") {
+      return;
+    }
+
+    if (hasAdminInvitee && adminInviteeName) {
+      setParticipantName(adminInviteeName);
+      hydrateParticipantSelection(adminInviteeName);
+      setHasInitializedSelection(true);
       return;
     }
 
@@ -429,7 +438,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, inviteToken }: 
 
           <div>
             <SectionLabel>Ranked Timeslots</SectionLabel>
-            <RankedSlots poll={poll} />
+            <RankedSlots poll={poll} sourceTimeZone={poll.timezone} targetTimeZone={activeTimeZone} />
           </div>
 
           <div>

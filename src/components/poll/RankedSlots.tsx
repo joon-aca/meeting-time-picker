@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, HelpCircle, Sparkles } from "lucide-react";
 import { Poll } from "@/lib/poll-types";
-import { rankSlots, tallyVotes } from "@/lib/poll-utils";
+import { formatTimeslotLabel, rankSlots, tallyVotes } from "@/lib/poll-utils";
 import { cn } from "@/lib/utils";
 
 interface RankedSlotsProps {
   poll: Poll;
+  sourceTimeZone: string;
+  targetTimeZone: string;
 }
 
 const DEFAULT_VISIBLE_SLOTS = 5;
@@ -118,7 +120,7 @@ function getRankedSlotTone(yesCount: number, maybeCount: number, totalInvitees: 
   };
 }
 
-export function RankedSlots({ poll }: RankedSlotsProps) {
+export function RankedSlots({ poll, sourceTimeZone, targetTimeZone }: RankedSlotsProps) {
   const [showAll, setShowAll] = useState(false);
   const ranked = rankSlots(tallyVotes(poll));
   const totalInvitees = poll.invitees.length;
@@ -130,6 +132,13 @@ export function RankedSlots({ poll }: RankedSlotsProps) {
       {visibleRanked.map((tally, index) => {
         const percentage = getAvailabilityPercentage(tally.yesCount, tally.maybeCount, totalInvitees);
         const tone = getRankedSlotTone(tally.yesCount, tally.maybeCount, totalInvitees);
+        const timeslotLabel = formatTimeslotLabel(
+          tally.timeslot.date,
+          tally.timeslot.startTime,
+          tally.timeslot.endTime,
+          sourceTimeZone,
+          targetTimeZone,
+        );
 
         return (
           <div
@@ -163,7 +172,7 @@ export function RankedSlots({ poll }: RankedSlotsProps) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-foreground">{tally.timeslot.label}</p>
+                    <p className="truncate text-sm font-semibold text-foreground">{timeslotLabel}</p>
                     <span
                       className={cn(
                         "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em]",
