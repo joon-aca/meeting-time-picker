@@ -1,28 +1,47 @@
 "use client";
 
-import { ShieldAlert, ShieldCheck, Link2, Mail, MousePointerClick, Lock } from "lucide-react";
+import { FormEvent, useState } from "react";
+import { ShieldAlert, Link2, Mail, MousePointerClick, Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface SecurePollAccessProps {
+  slug: string;
   title: string;
   description: string;
   timezone: string;
   status: "none" | "invalid";
+  initialInviteToken: string;
 }
 
-export function SecurePollAccess({ title, description, timezone, status }: SecurePollAccessProps) {
+export function SecurePollAccess({ slug, title, description, timezone, status, initialInviteToken }: SecurePollAccessProps) {
+  const router = useRouter();
   const isInvalid = status === "invalid";
+  const [token, setToken] = useState(initialInviteToken);
+  const [tokenError, setTokenError] = useState("");
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedToken = token.trim();
+
+    if (!trimmedToken) {
+      setTokenError("Enter your invite code to continue.");
+      return;
+    }
+
+    setTokenError("");
+    router.push(`/poll/${slug}?invite=${encodeURIComponent(trimmedToken)}`);
+  };
 
   const steps = isInvalid
     ? [
-        { icon: Link2, text: "Make sure you opened the full link — no missing characters." },
-        { icon: MousePointerClick, text: "Open it directly from the original message." },
-        { icon: Mail, text: "Ask the organizer to resend your invite." },
+        { icon: Link2, text: "Check that the code is complete." },
+        { icon: Mail, text: "If needed, ask for a fresh link." },
       ]
     : [
-        { icon: MousePointerClick, text: "Open the invite link sent by the organizer." },
-        { icon: ShieldCheck, text: "The poll unlocks automatically under your name." },
-        { icon: Mail, text: "Lost it? Ask the organizer to resend." },
+        { icon: MousePointerClick, text: "Enter the invite code from your message." },
+        { icon: Link2, text: "Or open the full link you were sent." },
       ];
 
   return (
@@ -98,7 +117,7 @@ export function SecurePollAccess({ title, description, timezone, status }: Secur
               <p className="text-lg sm:text-xl font-serif italic leading-relaxed opacity-70">
                 {isInvalid
                   ? "That invite link doesn't look right. It may be incomplete or from an older copy."
-                  : "This poll is invite-only. Open the personal link sent to you and it unlocks automatically."}
+                  : "This poll is invite-only. Paste your personal invite code below or open the full link that was sent to you."}
               </p>
 
               <p className="text-xs opacity-30 flex items-center gap-2">
@@ -116,21 +135,21 @@ export function SecurePollAccess({ title, description, timezone, status }: Secur
               <p className="text-[11px] font-semibold tracking-[0.2em] uppercase opacity-40 mb-6">
                 {isInvalid ? "Quick checks" : "What to do"}
               </p>
-              <ol className="space-y-5">
+              <ol className="space-y-4">
                 {steps.map((step, i) => (
                   <motion.li
                     key={i}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.6 + i * 0.15 }}
-                    className="flex items-start gap-4 group"
+                    className="flex items-center gap-4 group"
                   >
                     <span className="flex-shrink-0 w-10 h-10 rounded-xl border border-primary-foreground/10 bg-primary-foreground/5 flex items-center justify-center group-hover:bg-primary/20 group-hover:border-primary/30 transition-all duration-300">
                       <step.icon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
                     </span>
-                    <div className="pt-2">
+                    <div className="flex min-h-10 flex-col justify-center">
                       <span className="text-[11px] font-display font-semibold tracking-[0.15em] uppercase opacity-30 block mb-1">
-                        Step {i + 1}
+                        Option {i + 1}
                       </span>
                       <p className="text-sm leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">
                         {step.text}
@@ -141,6 +160,46 @@ export function SecurePollAccess({ title, description, timezone, status }: Secur
               </ol>
             </motion.div>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.75 }}
+            className="mt-10 flex justify-center"
+          >
+            <form onSubmit={handleSubmit} className="w-full max-w-md space-y-3 rounded-2xl border border-primary-foreground/10 bg-primary-foreground/5 p-4 sm:p-5">
+              <label htmlFor="invite-token" className="block text-center text-[11px] font-semibold uppercase tracking-[0.18em] opacity-50">
+                Invite Code
+              </label>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                <input
+                  id="invite-token"
+                  type="text"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={token}
+                  onChange={(event) => {
+                    setToken(event.target.value);
+                    if (tokenError) {
+                      setTokenError("");
+                    }
+                  }}
+                  placeholder="Name-ABC123"
+                  className="min-h-12 min-w-0 flex-1 appearance-none rounded-xl border border-primary-foreground/15 bg-black/15 px-4 py-3 text-lg leading-normal text-primary-foreground placeholder:text-primary-foreground/35 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <button
+                  type="submit"
+                  className="h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent px-4 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_hsl(var(--primary)/0.25)] transition-opacity hover:opacity-90 sm:min-w-[8rem]"
+                >
+                  Open Poll
+                </button>
+              </div>
+              {tokenError ? <p className="text-center text-sm text-amber-200">{tokenError}</p> : null}
+              <p className="text-center text-xs opacity-45">
+                {isInvalid ? "Paste the code again and retry." : "You can also open the full invite URL directly."}
+              </p>
+            </form>
+          </motion.div>
 
           {/* Bottom decorative line */}
           <motion.div

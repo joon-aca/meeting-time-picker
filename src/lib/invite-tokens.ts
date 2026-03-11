@@ -60,12 +60,18 @@ export function isAdminInviteeName(name: string) {
 
 export function createInviteToken(slug: string, name: string) {
   const publicId = getInvitePublicId(name);
-  return `${publicId}${getInviteTokenSuffix(slug, publicId)}`;
+  const displayId = getInviteDisplayId(name);
+
+  if (!displayId) {
+    throw new Error("Invitee name must contain at least one letter or number");
+  }
+
+  return `${displayId}-${getInviteTokenSuffix(slug, publicId)}`;
 }
 
 export function verifyInviteTokenForName(slug: string, name: string, token: string) {
-  const expectedToken = createInviteToken(slug, name);
-  const normalizedToken = token.trim().toUpperCase();
+  const expectedToken = createInviteToken(slug, name).replace(/-/g, "").toUpperCase();
+  const normalizedToken = token.trim().replace(/-/g, "").toUpperCase();
   const expectedBuffer = Buffer.from(expectedToken);
   const providedBuffer = Buffer.from(normalizedToken);
 

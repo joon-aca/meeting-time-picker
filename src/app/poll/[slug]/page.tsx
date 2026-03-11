@@ -30,10 +30,12 @@ export default async function PollPage({
   if (inviteTokenStatus !== "valid") {
     return (
       <SecurePollAccess
+        slug={slug}
         title={poll.title}
         description={poll.description}
         timezone={getTimeZoneDisplayLabel(poll.timezone, poll.timeslots[0]?.date, poll.timeslots[0]?.startTime)}
         status={inviteTokenStatus}
+        initialInviteToken={invite ?? ""}
       />
     );
   }

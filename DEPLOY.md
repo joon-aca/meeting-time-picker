@@ -183,7 +183,7 @@ Output looks like:
 
 ```text
 Raj
-https://polls.example.com/poll/aca-board-meeting-picker?invite=RAJ7K3M2P
+https://polls.example.com/poll/aca-board-meeting-picker?invite=Raj-V2K0P0
 ```
 
 ## Invite Link Behavior

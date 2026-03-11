@@ -23,6 +23,12 @@ async function resolveSeedPath() {
 
 const CROCKFORD_BASE32_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
+function getInviteDisplayId(name) {
+  return name
+    .normalize("NFKD")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "");
+}
+
 function normalizeInviteeName(name) {
   return name
     .normalize("NFKD")
@@ -53,10 +59,11 @@ function encodeCrockfordBase32(bytes) {
 }
 
 function createInviteToken(slug, name) {
+  const displayId = getInviteDisplayId(name);
   const publicId = normalizeInviteeName(name);
   const digest = createHash("sha256").update(`${slug}:${publicId}`).digest();
   const suffix = encodeCrockfordBase32(digest).slice(0, 6);
-  return `${publicId}${suffix}`;
+  return `${displayId}-${suffix}`;
 }
 
 async function main() {
