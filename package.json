@@ -16,10 +16,11 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@radix-ui/react-select": "^2.2.5",
     "@prisma/client": "^6.6.0",
+    "@radix-ui/react-select": "^2.2.5",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
+    "framer-motion": "^12.35.2",
     "lucide-react": "^0.462.0",
     "next": "^15.0.0",
     "react": "^19.0.0",

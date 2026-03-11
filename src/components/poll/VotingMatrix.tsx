@@ -75,19 +75,20 @@ export function VotingMatrix({
 
         return (
           <section key={weekKey} className="overflow-hidden rounded-xl border border-border bg-card">
-            <div className="border-b border-border bg-secondary/70 px-4 py-3">
-              <h3 className="text-sm font-semibold text-foreground">{week.weekLabel}</h3>
-            </div>
-
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full table-fixed">
-                <thead>
+                <thead className="bg-gradient-to-l from-primary/[0.08] to-primary/[0.04]">
+                  <tr>
+                    <th colSpan={dayEntries.length + 1} className="px-4 pt-4 pb-2 text-left">
+                      <h3 className="font-display text-base font-bold tracking-tight text-foreground">{week.weekLabel}</h3>
+                    </th>
+                  </tr>
                   <tr className="border-b border-border">
-                    <th className="w-40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    <th className="w-40 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                       Time
                     </th>
                     {dayEntries.map(([dayKey, day]) => (
-                      <th key={dayKey} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      <th key={dayKey} className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                         {day.dayLabel}
                       </th>
                     ))}
@@ -126,10 +127,13 @@ export function VotingMatrix({
             </div>
 
             <div className="grid gap-4 p-4 md:hidden">
-              {dayEntries.map(([dayKey, day]) => (
+              {dayEntries.map(([dayKey, day], dayIndex) => (
                 <div key={dayKey} className="rounded-lg border border-border bg-background/70">
-                  <div className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">
-                    {day.dayLabel}
+                  <div className="border-b border-border bg-gradient-to-l from-primary/[0.08] to-primary/[0.04] px-4 pb-2.5 pt-3">
+                    {dayIndex === 0 ? (
+                      <p className="mb-0.5 font-display text-xs font-semibold uppercase tracking-[0.14em] text-primary/60">{week.weekLabel}</p>
+                    ) : null}
+                    <p className="font-display text-sm font-bold tracking-tight text-foreground">{day.dayLabel}</p>
                   </div>
                   <div className="space-y-3 p-4">
                     {day.slots

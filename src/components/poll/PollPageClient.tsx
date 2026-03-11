@@ -193,7 +193,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
     }
 
     setHasInitializedSelection(true);
-  }, [hasInitializedSelection, hasLockedInvitee, hydrateParticipantSelection, legacyStorageKey, lockedInviteeName, poll.invitees, storageKey]);
+  }, [adminInviteeName, hasAdminInvitee, hasInitializedSelection, hasLockedInvitee, hydrateParticipantSelection, legacyStorageKey, lockedInviteeName, poll.invitees, storageKey]);
 
   const handleSubmit = async () => {
     const trimmedName = participantName.trim();
@@ -258,7 +258,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-poll space-y-10 px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-poll space-y-10 px-4 py-8 sm:px-6 sm:py-10">
         <PollHeader
           title={poll.title}
           description={poll.description}
@@ -271,64 +271,51 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
           <div className="space-y-3">
             <div>
               {hasLockedInvitee && matchedInvitee ? (
-                <div className="w-full rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 sm:w-80">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Secure Invite Link</p>
-                  <div className="mt-1 flex min-w-0 items-center justify-between gap-3 text-left">
-                    <span className="truncate font-medium text-foreground">{matchedInvitee.name}</span>
-                    <span className="flex-shrink-0 text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                <div className="w-full rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 px-4 py-3 sm:w-80 shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/70">Secure Invite</p>
+                  <div className="mt-1.5 flex min-w-0 items-center justify-between gap-3 text-left">
+                    <span className="truncate font-display font-semibold text-foreground">{matchedInvitee.name}</span>
+                    <span className="flex-shrink-0 rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
                       {matchedInvitee.timeZoneLabel}
                     </span>
                   </div>
                 </div>
               ) : (
-                <Select
-                  value={participantName || undefined}
-                  onValueChange={(value) => {
-                    handleParticipantSelection(value);
-                  }}
-                  disabled={state === "submitting"}
-                >
-                  <SelectTrigger className="h-11 w-full rounded-lg bg-card sm:w-80">
-                    {matchedInvitee ? (
-                      <div className="flex min-w-0 flex-1 items-center justify-between gap-3 pr-4 text-left">
-                        <span className="truncate text-foreground">{matchedInvitee.name}</span>
-                        <span className="flex-shrink-0 text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                          {matchedInvitee.timeZoneLabel}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="text-muted-foreground">&lt;Please Select&gt;</div>
-                    )}
-                  </SelectTrigger>
-                  <SelectContent>
-                    {unsubmittedInvitees.length > 0 ? (
-                      <SelectGroup>
-                        <SelectLabel>Available To Pick</SelectLabel>
-                        {unsubmittedInvitees.map((invitee) => (
-                          <SelectItem key={invitee.id} value={invitee.name}>
-                            <span className="flex w-full items-center justify-between gap-3 pr-4">
-                              <span>{invitee.name}</span>
-                              <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                                {invitee.timeZoneLabel}
-                              </span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ) : null}
+                <div className="space-y-2">
+                  {hasAdminInvitee && adminInviteeName ? (
+                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+                      <span>Admin Mode</span>
+                      <span className="text-primary/60">{adminInviteeName} can edit any response</span>
+                    </div>
+                  ) : null}
 
-                    {submittedInvitees.length > 0 ? (
-                      <>
-                        {unsubmittedInvitees.length > 0 ? <SelectSeparator /> : null}
+                  <Select
+                    value={participantName || undefined}
+                    onValueChange={(value) => {
+                      handleParticipantSelection(value);
+                    }}
+                    disabled={state === "submitting"}
+                  >
+                    <SelectTrigger className="h-11 w-full rounded-lg bg-card sm:w-80">
+                      {matchedInvitee ? (
+                        <div className="flex min-w-0 flex-1 items-center justify-between gap-3 pr-4 text-left">
+                          <span className="truncate text-foreground">{matchedInvitee.name}</span>
+                          <span className="flex-shrink-0 text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                            {matchedInvitee.timeZoneLabel}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-muted-foreground">&lt;Please Select&gt;</div>
+                      )}
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unsubmittedInvitees.length > 0 ? (
                         <SelectGroup>
-                          <SelectLabel>Already Selected</SelectLabel>
-                          {submittedInvitees.map((invitee) => (
+                          <SelectLabel>{hasAdminInvitee ? "Not Submitted Yet" : "Available To Pick"}</SelectLabel>
+                          {unsubmittedInvitees.map((invitee) => (
                             <SelectItem key={invitee.id} value={invitee.name}>
                               <span className="flex w-full items-center justify-between gap-3 pr-4">
-                                <span className="flex items-center gap-2">
-                                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                                  <span>{invitee.name}</span>
-                                </span>
+                                <span>{invitee.name}</span>
                                 <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
                                   {invitee.timeZoneLabel}
                                 </span>
@@ -336,10 +323,32 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
                             </SelectItem>
                           ))}
                         </SelectGroup>
-                      </>
-                    ) : null}
-                  </SelectContent>
-                </Select>
+                      ) : null}
+
+                      {submittedInvitees.length > 0 ? (
+                        <>
+                          {unsubmittedInvitees.length > 0 ? <SelectSeparator /> : null}
+                          <SelectGroup>
+                            <SelectLabel>{hasAdminInvitee ? "Submitted Responses" : "Already Selected"}</SelectLabel>
+                            {submittedInvitees.map((invitee) => (
+                              <SelectItem key={invitee.id} value={invitee.name}>
+                                <span className="flex w-full items-center justify-between gap-3 pr-4">
+                                  <span className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                                    <span>{invitee.name}</span>
+                                  </span>
+                                  <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                                    {invitee.timeZoneLabel}
+                                  </span>
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </>
+                      ) : null}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
               {nameError ? <p className="mt-1.5 text-xs text-destructive animate-fade-in">{nameError}</p> : null}
             </div>
@@ -363,16 +372,16 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
 
           {feedback ? (
             <div
-              className={`animate-fade-in rounded-lg border px-5 py-4 ${
+              className={`animate-fade-in rounded-xl border px-5 py-4 ${
                 feedback.kind === "error"
-                  ? "border-destructive bg-destructive/5"
+                  ? "border-destructive/30 bg-destructive/5"
                   : feedback.kind === "info"
                     ? "border-border bg-secondary"
-                    : "border-primary bg-primary/5"
+                    : "border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5"
               }`}
             >
               <p
-                className={`text-sm font-medium ${
+                className={`text-sm font-semibold ${
                   feedback.kind === "error"
                     ? "text-destructive"
                     : feedback.kind === "info"
@@ -387,11 +396,12 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
                   <p className="text-xs text-muted-foreground">Thank you, {participantName.trim()}!</p>
                   <button
                     type="button"
-                    onClick={() => {
+                  onClick={() => {
+                      hydrateParticipantSelection(participantName.trim());
                       setState("loaded");
                       setFeedback(null);
                     }}
-                    className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+                    className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
                   >
                     Edit
                   </button>
@@ -401,8 +411,10 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
           ) : null}
 
           {!matchedInvitee ? (
-            <div className="rounded-lg border border-dashed border-border bg-secondary/60 px-5 py-6 text-sm text-muted-foreground">
-              Choose your name above to see the meeting options in your timezone.
+            <div className="rounded-xl border border-dashed border-border bg-secondary/40 px-5 py-8 text-sm text-muted-foreground text-center">
+              {hasAdminInvitee
+                ? "Choose a participant above to inspect or update their availability."
+                : "Choose your name above to see the meeting options in your timezone."}
             </div>
           ) : state !== "success" ? (
             <>
@@ -420,7 +432,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
                 type="button"
                 onClick={handleSubmit}
                 disabled={state === "submitting"}
-                className="w-full rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                className="w-full rounded-xl bg-gradient-to-br from-primary to-accent px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_4px_20px_hsl(var(--primary)/0.35)] transition-all hover:opacity-90 hover:shadow-[0_6px_28px_hsl(var(--primary)/0.45)] hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:translate-y-0 sm:w-auto"
               >
                 {state === "submitting" ? "Submitting..." : hasExisting ? "Update My Availability" : "Submit My Availability"}
               </button>

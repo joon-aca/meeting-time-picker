@@ -12,18 +12,22 @@ export function ResultsSummary({ poll }: ResultsSummaryProps) {
   const totalMaybe = tallies.reduce((sum, tally) => sum + tally.maybeCount, 0);
 
   const cards = [
-    { label: "Participants", value: totalParticipants },
-    { label: "Timeslots", value: poll.timeslots.length },
-    { label: "Yes Votes", value: totalYes },
-    { label: "Maybe Votes", value: totalMaybe },
+    { label: "Responded", value: totalParticipants, sub: `of ${poll.invitees.length}` },
+    { label: "Timeslots", value: poll.timeslots.length, sub: "offered" },
+    { label: "Yes Votes", value: totalYes, sub: "across all slots" },
+    { label: "Maybe Votes", value: totalMaybe, sub: "across all slots" },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {cards.map((card) => (
-        <div key={card.label} className="rounded-lg border border-border bg-secondary px-4 py-3">
-          <p className="text-2xl font-semibold text-foreground">{card.value}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{card.label}</p>
+        <div
+          key={card.label}
+          className="rounded-xl border border-border bg-card px-4 py-4 shadow-sm"
+        >
+          <p className="text-3xl font-display font-bold tracking-tight text-foreground">{card.value}</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{card.label}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground/60">{card.sub}</p>
         </div>
       ))}
     </div>
