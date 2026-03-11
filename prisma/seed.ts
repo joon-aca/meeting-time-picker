@@ -56,6 +56,7 @@ async function main() {
         data: poll.invitees.map((invitee) => ({
           pollId: createdPoll.id,
           name: invitee.name,
+          isAdmin: invitee.isAdmin,
           timeZone: invitee.timeZone,
           timeZoneLabel: invitee.timeZoneLabel,
           email: invitee.email ?? null,

@@ -59,6 +59,7 @@ model Invitee {
   pollId        String
   poll          Poll    @relation(fields: [pollId], references: [id], onDelete: Cascade)
   name          String
+  isAdmin       Boolean @default(false)
   timeZone      String  @default("America/New_York")
   timeZoneLabel String  @default("EDT")
   email         String?

@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { participantPayloadSchema } from "@/lib/poll-schemas";
 import { Poll, Vote } from "@/lib/poll-types";
-import { isAdminInviteeName, resolveInviteeNameFromToken } from "@/lib/invite-tokens";
+import { resolveInviteeNameFromToken } from "@/lib/invite-tokens";
 import { formatTimeslotLabel, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
 
 const pollInclude = {
@@ -53,6 +53,7 @@ function toPoll(record: PollRecord): Poll {
     invitees: record.invitees.map((invitee) => ({
       id: invitee.id,
       name: invitee.name,
+      isAdmin: invitee.isAdmin,
       timeZone: invitee.timeZone,
       timeZoneLabel: invitee.timeZoneLabel || getTimeZoneDisplayLabel(invitee.timeZone, record.timeslots[0]?.date, record.timeslots[0]?.startTime),
       email: invitee.email,
@@ -202,7 +203,13 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
       throw new Error("Invalid invite token");
     }
 
-    if (!isAdminInviteeName(inviteeNameFromToken) && inviteeNameFromToken !== payload.name) {
+    const tokenInvitee = poll.invitees.find((invitee) => invitee.name === inviteeNameFromToken);
+
+    if (!tokenInvitee) {
+      throw new Error("Invalid invite token");
+    }
+
+    if (!tokenInvitee.isAdmin && inviteeNameFromToken !== payload.name) {
       throw new Error("This invite link cannot update another participant");
     }
   }

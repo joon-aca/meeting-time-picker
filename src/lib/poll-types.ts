@@ -25,6 +25,7 @@ export interface Participant {
 export interface Invitee {
   id: string;
   name: string;
+  isAdmin: boolean;
   timeZone: string;
   timeZoneLabel: string;
   email: string | null;

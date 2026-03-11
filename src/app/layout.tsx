@@ -3,7 +3,7 @@ import "@/app/globals.css";
 
 export const metadata: Metadata = {
   title: "Meeting Time Picker",
-  description: "Scheduling poll for the ACA board meeting.",
+  description: "A lightweight scheduling poll for comparing meeting availability.",
   robots: {
     index: false,
     follow: false,

@@ -33,6 +33,7 @@ const seedParticipantSchema = z.object({
 
 const seedInviteeSchema = z.object({
   name: z.string().trim().min(1),
+  isAdmin: z.boolean().optional().default(false),
   timeZone: z.string().trim().min(1),
   timeZoneLabel: z.string().trim().min(1),
   email: z.string().email().nullable().optional(),

@@ -130,36 +130,43 @@
     "invitees": [
       {
         "name": "Avery",
+        "isAdmin": false,
         "timeZone": "America/New_York",
         "timeZoneLabel": "EDT"
       },
       {
         "name": "Greta",
+        "isAdmin": false,
         "timeZone": "Europe/Berlin",
         "timeZoneLabel": "CET"
       },
       {
         "name": "Lwazi",
+        "isAdmin": false,
         "timeZone": "Africa/Maputo",
         "timeZoneLabel": "CAT"
       },
       {
         "name": "Maya",
+        "isAdmin": false,
         "timeZone": "America/Los_Angeles",
         "timeZoneLabel": "PDT"
       },
       {
         "name": "Jules",
+        "isAdmin": true,
         "timeZone": "America/Los_Angeles",
         "timeZoneLabel": "PDT"
       },
       {
         "name": "Omar",
+        "isAdmin": false,
         "timeZone": "America/New_York",
         "timeZoneLabel": "EDT"
       },
       {
         "name": "Noah",
+        "isAdmin": false,
         "timeZone": "America/Los_Angeles",
         "timeZoneLabel": "PDT"
       }

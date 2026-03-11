@@ -63,7 +63,7 @@ export function SecurePollAccess({ slug, title, description, timezone, status, i
             <Lock className="w-4 h-4 text-primary-foreground" />
           </div>
           <span className="text-sm font-display font-semibold tracking-tight opacity-80">
-            ACA Board
+            Meeting Time Picker
           </span>
         </div>
         <span className="text-[11px] tracking-[0.2em] uppercase opacity-40">

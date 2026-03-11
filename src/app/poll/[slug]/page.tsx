@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PollPageClient } from "@/components/poll/PollPageClient";
 import { SecurePollAccess } from "@/components/poll/SecurePollAccess";
-import { isAdminInviteeName, resolveInviteeNameFromToken } from "@/lib/invite-tokens";
+import { resolveInviteeNameFromToken } from "@/lib/invite-tokens";
 import { getPollBySlug } from "@/lib/polls";
 import { getTimeZoneDisplayLabel } from "@/lib/poll-utils";
 
@@ -24,7 +24,7 @@ export default async function PollPage({
 
   const tokenName = invite ? resolveInviteeNameFromToken(slug, invite, poll.invitees.map((invitee) => invitee.name)) : null;
   const lockedInvitee = tokenName ? poll.invitees.find((invitee) => invitee.name === tokenName) : null;
-  const adminInviteeName = lockedInvitee && isAdminInviteeName(lockedInvitee.name) ? lockedInvitee.name : null;
+  const adminInviteeName = lockedInvitee?.isAdmin ? lockedInvitee.name : null;
   const inviteTokenStatus = !invite ? "none" : lockedInvitee ? "valid" : "invalid";
 
   if (inviteTokenStatus !== "valid") {
