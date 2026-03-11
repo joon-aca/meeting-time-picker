@@ -21,6 +21,7 @@ prisma/dev.db-journal
 prisma/prod.db
 prisma/prod.db-journal
 prisma/seed-data/polls.local.json
+tsconfig.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
