@@ -77,8 +77,12 @@ export function isSameOriginRequest(request: Request): boolean {
   }
 
   try {
-    const requestOrigin = new URL(request.url).origin;
-    return origin === requestOrigin;
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+    const proto = request.headers.get("x-forwarded-proto") || new URL(request.url).protocol.replace(":", "");
+    if (host) {
+      return origin === `${proto}://${host}`;
+    }
+    return origin === new URL(request.url).origin;
   } catch {
     return false;
   }
