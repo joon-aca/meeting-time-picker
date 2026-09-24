@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { randomUUID } from "node:crypto";
+import { getD1Database, getPrisma } from "@/lib/prisma";
 import { participantPayloadSchema } from "@/lib/poll-schemas";
 import { Poll, Vote } from "@/lib/poll-types";
 import { resolveInviteeNameFromToken } from "@/lib/invite-tokens";
@@ -72,6 +73,7 @@ function toPoll(record: PollRecord): Poll {
 }
 
 async function getPollRecordOrThrow(slug: string): Promise<PollRecord> {
+  const prisma = getPrisma();
   const poll = await prisma.poll.findUnique({
     where: { slug },
     include: pollInclude,
@@ -85,6 +87,7 @@ async function getPollRecordOrThrow(slug: string): Promise<PollRecord> {
 }
 
 export async function listPolls(): Promise<Poll[]> {
+  const prisma = getPrisma();
   const polls = await prisma.poll.findMany({
     orderBy: {
       createdAt: "asc",
@@ -96,9 +99,10 @@ export async function listPolls(): Promise<Poll[]> {
 }
 
 export async function getDefaultPollSlug(): Promise<string | null> {
+  const prisma = getPrisma();
   const poll = await prisma.poll.findFirst({
     orderBy: {
-      createdAt: "asc",
+      createdAt: "desc",
     },
     select: {
       slug: true,
@@ -109,6 +113,7 @@ export async function getDefaultPollSlug(): Promise<string | null> {
 }
 
 export async function getPollBySlug(slug: string): Promise<Poll | null> {
+  const prisma = getPrisma();
   const poll = await prisma.poll.findUnique({
     where: { slug },
     include: pollInclude,
@@ -118,6 +123,7 @@ export async function getPollBySlug(slug: string): Promise<Poll | null> {
 }
 
 export async function getParticipantByName(slug: string, rawName: string) {
+  const prisma = getPrisma();
   const name = rawName.trim();
   const poll = await prisma.poll.findUnique({
     where: { slug },
@@ -156,6 +162,7 @@ export async function getParticipantByName(slug: string, rawName: string) {
 }
 
 export async function saveParticipantVotes(slug: string, input: unknown) {
+  const prisma = getPrisma();
   const payload = participantPayloadSchema.parse(input);
   const poll = await prisma.poll.findUnique({
     where: { slug },
@@ -196,22 +203,20 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
     throw new Error("Selected participant is not part of this poll");
   }
 
-  if (payload.inviteToken) {
-    const inviteeNameFromToken = resolveInviteeNameFromToken(slug, payload.inviteToken, inviteeNames);
+  const inviteeNameFromToken = resolveInviteeNameFromToken(slug, payload.inviteToken, inviteeNames);
 
-    if (!inviteeNameFromToken) {
-      throw new Error("Invalid invite token");
-    }
+  if (!inviteeNameFromToken) {
+    throw new Error("Invalid invite token");
+  }
 
-    const tokenInvitee = poll.invitees.find((invitee) => invitee.name === inviteeNameFromToken);
+  const tokenInvitee = poll.invitees.find((invitee) => invitee.name === inviteeNameFromToken);
 
-    if (!tokenInvitee) {
-      throw new Error("Invalid invite token");
-    }
+  if (!tokenInvitee) {
+    throw new Error("Invalid invite token");
+  }
 
-    if (!tokenInvitee.isAdmin && inviteeNameFromToken !== payload.name) {
-      throw new Error("This invite link cannot update another participant");
-    }
+  if (!tokenInvitee.isAdmin && inviteeNameFromToken !== payload.name) {
+    throw new Error("This invite link cannot update another participant");
   }
 
   const normalizedVotes = expectedTimeslotIds.map((timeslotId) => ({
@@ -231,43 +236,63 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
     },
   });
 
-  const participant = await prisma.$transaction(async (tx) => {
-    const savedParticipant = existingParticipant
-      ? await tx.participant.update({
-          where: { id: existingParticipant.id },
-          data: {
-            submittedAt: new Date(),
-          },
-        })
-      : await tx.participant.create({
-          data: {
-            pollId: poll.id,
-            name: payload.name,
-            submittedAt: new Date(),
-          },
+  const database = getD1Database();
+  const participant = database
+    ? await (async () => {
+        // D1 executes a batch atomically; Prisma's D1 adapter does not provide
+        // transaction guarantees for this multi-step vote replacement.
+        const participantId = existingParticipant?.id ?? randomUUID();
+        const submittedAt = new Date().toISOString();
+        const statements = existingParticipant
+          ? [
+              database.prepare('UPDATE "Participant" SET "submittedAt" = ? WHERE "id" = ?').bind(submittedAt, participantId),
+              database.prepare('DELETE FROM "Vote" WHERE "participantId" = ?').bind(participantId),
+            ]
+          : [
+              database
+                .prepare('INSERT INTO "Participant" ("id", "pollId", "name", "submittedAt") VALUES (?, ?, ?, ?)')
+                .bind(participantId, poll.id, payload.name, submittedAt),
+            ];
+
+        for (const vote of normalizedVotes) {
+          statements.push(
+            database
+              .prepare('INSERT INTO "Vote" ("id", "participantId", "timeslotId", "value") VALUES (?, ?, ?, ?)')
+              .bind(randomUUID(), participantId, vote.timeslotId, vote.value),
+          );
+        }
+
+        await database.batch(statements);
+
+        return prisma.participant.findUniqueOrThrow({
+          where: { id: participantId },
+          include: { votes: true },
+        });
+      })()
+    : await prisma.$transaction(async (tx) => {
+        const savedParticipant = existingParticipant
+          ? await tx.participant.update({
+              where: { id: existingParticipant.id },
+              data: { submittedAt: new Date() },
+            })
+          : await tx.participant.create({
+              data: { pollId: poll.id, name: payload.name, submittedAt: new Date() },
+            });
+
+        await tx.vote.deleteMany({ where: { participantId: savedParticipant.id } });
+        await tx.vote.createMany({
+          data: normalizedVotes.map((vote) => ({
+            participantId: savedParticipant.id,
+            timeslotId: vote.timeslotId,
+            value: vote.value,
+          })),
         });
 
-    await tx.vote.deleteMany({
-      where: {
-        participantId: savedParticipant.id,
-      },
-    });
-
-    await tx.vote.createMany({
-      data: normalizedVotes.map((vote) => ({
-        participantId: savedParticipant.id,
-        timeslotId: vote.timeslotId,
-        value: vote.value,
-      })),
-    });
-
-    return tx.participant.findUniqueOrThrow({
-      where: { id: savedParticipant.id },
-      include: {
-        votes: true,
-      },
-    });
-  });
+        return tx.participant.findUniqueOrThrow({
+          where: { id: savedParticipant.id },
+          include: { votes: true },
+        });
+      });
 
   const refreshedPoll = await getPollRecordOrThrow(slug);
 

@@ -17,7 +17,7 @@ export const participantVoteSchema = z.object({
 export const participantPayloadSchema = z.object({
   name: participantNameSchema,
   votes: z.array(participantVoteSchema),
-  inviteToken: z.string().trim().min(1).optional(),
+  inviteToken: z.string().trim().min(1),
 });
 
 const seedVoteSchema = z.object({

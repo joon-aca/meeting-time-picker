@@ -5,6 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:worker": "opennextjs-cloudflare build",
+    "preview:worker": "opennextjs-cloudflare preview",
+    "deploy:worker": "opennextjs-cloudflare deploy",
+    "d1:migrate:local": "wrangler d1 migrations apply meeting-time-picker --local",
+    "d1:migrate:remote": "wrangler d1 migrations apply meeting-time-picker --remote",
+    "d1:seed:sql": "tsx scripts/generate-d1-seed.ts",
     "start": "next start",
     "lint": "eslint .",
     "deploy:plan": "node scripts/generate-deploy-config.mjs",
@@ -16,19 +22,22 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.6.0",
+    "@opennextjs/cloudflare": "^1.20.6",
+    "@prisma/adapter-d1": "^6.19.2",
+    "@prisma/client": "^6.19.2",
     "@radix-ui/react-select": "^2.2.5",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "framer-motion": "^12.35.2",
     "lucide-react": "^0.462.0",
-    "next": "^15.0.0",
+    "next": "^15.5.24",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260924.1",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
@@ -44,13 +53,14 @@
     "globals": "^15.15.0",
     "jsdom": "^20.0.3",
     "postcss": "^8.5.6",
-    "prisma": "^6.6.0",
+    "prisma": "^6.19.2",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.139.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

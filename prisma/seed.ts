@@ -1,9 +1,10 @@
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
-import { prisma } from "../src/lib/prisma";
+import { getLocalPrisma } from "../src/lib/prisma";
 import { seedFileSchema } from "../src/lib/poll-schemas";
 
 async function main() {
+  const prisma = getLocalPrisma();
   const localSeedPath = path.join(process.cwd(), "prisma", "seed-data", "polls.local.json");
   const defaultSeedPath = path.join(process.cwd(), "prisma", "seed-data", "polls.json");
   let seedPath = defaultSeedPath;
@@ -101,5 +102,5 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await getLocalPrisma().$disconnect();
   });

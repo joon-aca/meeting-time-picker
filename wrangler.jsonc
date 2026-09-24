@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "meeting-time-picker",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "meeting-time-picker",
+      "database_id": "76ec5030-70ff-4e27-a960-27578aff1fbf",
+      "migrations_dir": "d1/migrations"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

@@ -8,6 +8,8 @@ export default tseslint.config(
     ignores: [
       "dist",
       ".next",
+      ".open-next",
+      ".wrangler",
       "node_modules",
       "src/components/ui/**/*",
       "src/components/NavLink.tsx",
