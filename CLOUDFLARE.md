@@ -1,0 +1,90 @@
+# Cloudflare Worker deployment
+
+The app runs on Cloudflare Workers with one D1 database. The Worker currently runs at
+`https://meeting-time-picker.cold-mud-a444.workers.dev`. The existing
+`meeting.africacode.org` hostname still points at Lando; switch it after the new
+board poll is ready.
+
+Cloudflare resources:
+
+- Worker: `meeting-time-picker`
+- D1 database: `meeting-time-picker`
+- Wrangler config: `wrangler.jsonc`
+- D1 schema migrations: `d1/migrations`
+
+## Local preview
+
+```bash
+npm ci
+npm run d1:migrate:local
+npm run d1:seed:sql -- --source prisma/seed-data/polls.json --output d1/seed.local.sql
+npx wrangler d1 execute meeting-time-picker --local --file d1/seed.local.sql
+npm run build:worker
+npm run preview:worker
+```
+
+The SQL generator refuses to overwrite its output. Remove or choose another local
+output file if you intentionally want to generate a new seed. Do not use the sample
+poll data for the real board meeting.
+
+## Deploy
+
+Authenticate Wrangler with the Cloudflare account that owns the database and zone.
+The database ID is recorded in `wrangler.jsonc`.
+
+```bash
+npm ci
+npm run d1:migrate:remote
+npm run build:worker
+npm run deploy:worker
+```
+
+`npm run deploy:worker` uploads the build already in `.open-next`. Rebuild first
+after code changes. The Worker uses its D1 binding; it does not use `DATABASE_URL`
+or the local SQLite file.
+
+## Poll data
+
+The original Lando SQLite data was imported into D1 on September 24, 2026. The
+private database backup and export files are gitignored. D1 currently contains
+the prior poll, including its responses.
+
+For a new meeting, create a new JSON poll with a **new slug**. This keeps old
+responses separate. The JSON format is shown in `prisma/seed-data/polls.json`.
+Generate an insert-only D1 SQL file, inspect it, then import it:
+
+```bash
+npm run d1:seed:sql -- --source prisma/seed-data/polls.local.json --output d1/new-board.local.sql
+npx wrangler d1 execute meeting-time-picker --remote --file d1/new-board.local.sql
+```
+
+The generator never deletes or updates existing polls. It fails if the slug
+already exists. Keep generated SQL private: it may contain names and email
+addresses. Do not run `npm run prisma:seed` against a database with responses;
+that older command deletes and recreates every poll.
+
+The home page redirects to the newest poll by `createdAt`. Invite links are
+generated from the exact invitee names and poll slug:
+
+```bash
+npm run invite:links -- --base-url https://meeting.africacode.org
+```
+
+The invite link generator prefers `polls.local.json` when present.
+
+## Moving the hostname
+
+`meeting.africacode.org` currently resolves directly to Lando. Once the new poll
+has been imported and checked on the `workers.dev` URL, attach
+`meeting.africacode.org` as a Worker custom domain. Cloudflare will create its
+DNS record and certificate. Update `wrangler.jsonc` with a `routes` entry:
+
+```json
+"routes": [{ "pattern": "meeting.africacode.org", "custom_domain": true }]
+```
+
+Then deploy again and check the poll, invite links, and vote submission on the
+custom domain. The former Caddy route on Lando can be removed after cutover.
+
+The Worker and D1 use only Free plan features. Cloudflare's Free limits still
+apply; monitor Worker CPU and D1 usage after the first invitations go out.

@@ -91,7 +91,8 @@ If the invitee has `"isAdmin": true` in the seed JSON:
 
 ## Deploy
 
-See [DEPLOY.md](/Users/joon/dev/github/meeting-time-picker/DEPLOY.md).
+The live Cloudflare Worker and D1 setup is described in [CLOUDFLARE.md](/Users/joon/dev/github/meeting-time-picker/CLOUDFLARE.md).
+The former Lando server setup is in [DEPLOY.md](/Users/joon/dev/github/meeting-time-picker/DEPLOY.md).
 
 ## Main files
 
