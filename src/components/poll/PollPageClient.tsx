@@ -19,21 +19,26 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { getTimeslotDisplayMeta, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
+import { rememberedNameCookieKey, rememberedNameCookiePath } from "@/lib/remembered-name";
 
 interface PollPageClientProps {
   initialPoll: Poll;
   lockedInviteeName: string | null;
   adminInviteeName: string | null;
   inviteToken: string | null;
+  rememberedName?: string | null;
 }
 
 type PollPageState = "idle" | "loading" | "loaded" | "submitting" | "success" | "error";
 type Feedback = { kind: "success" | "info" | "error"; message: string } | null;
 
-export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeName, inviteToken }: PollPageClientProps) {
+export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeName, inviteToken, rememberedName = null }: PollPageClientProps) {
   const [poll, setPoll] = useState(initialPoll);
   const [state, setState] = useState<PollPageState>("idle");
-  const [participantName, setParticipantName] = useState("");
+  const [participantName, setParticipantName] = useState(initialPoll.accessMode === "SHARED" ? rememberedName ?? "" : "");
+  const [newName, setNewName] = useState("");
+  const [showNamePicker, setShowNamePicker] = useState(!rememberedName);
+  const [browserTimeZone, setBrowserTimeZone] = useState(initialPoll.timezone);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [nameError, setNameError] = useState("");
   const [hasExisting, setHasExisting] = useState(false);
@@ -44,9 +49,17 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
   const storageKey = `meeting-time-picker:selected-name:v2:${poll.slug}`;
   const legacyStorageKey = `meeting-time-picker:selected-name:${poll.slug}`;
   const normalizedName = participantName.trim();
+  const isShared = poll.accessMode === "SHARED";
   const hasLockedInvitee = Boolean(lockedInviteeName);
   const hasAdminInvitee = Boolean(adminInviteeName);
-  const matchedInvitee = poll.invitees.find((invitee) => invitee.name === normalizedName);
+  const matchedInvitee = poll.invitees.find((invitee) => invitee.name === normalizedName) ??
+    (isShared && normalizedName ? {
+      id: `new:${normalizedName}`,
+      name: normalizedName,
+      isAdmin: false,
+      timeZone: browserTimeZone,
+      timeZoneLabel: getTimeZoneDisplayLabel(browserTimeZone, poll.timeslots[0]?.date, poll.timeslots[0]?.startTime),
+    } : undefined);
   const activeTimeZone = matchedInvitee?.timeZone ?? poll.timezone;
   const activeTimeZoneLabel =
     matchedInvitee?.timeZoneLabel ??
@@ -107,6 +120,11 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
     });
   }, [poll.participants, weekSlotIds]);
 
+  useEffect(() => {
+    const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (detectedTimeZone) setBrowserTimeZone(detectedTimeZone);
+  }, []);
+
   const handleVoteChange = (timeslotId: string, value: VoteValue) => {
     setVotes((previous) => {
       const filtered = previous.filter((vote) => vote.timeslotId !== timeslotId);
@@ -148,7 +166,17 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
     setNameError("");
     setFeedback(null);
 
-    if (!hasAdminInvitee && typeof window !== "undefined") {
+    if (isShared && typeof document !== "undefined") {
+      const cookieName = rememberedNameCookieKey();
+      const cookiePath = rememberedNameCookiePath();
+      const secure = window.location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = selectedName
+        ? `${cookieName}=${encodeURIComponent(selectedName)}; Path=${cookiePath}; Max-Age=31536000; SameSite=Lax${secure}`
+        : `${cookieName}=; Path=${cookiePath}; Max-Age=0; SameSite=Lax${secure}`;
+      setShowNamePicker(!selectedName);
+    }
+
+    if (!isShared && !hasAdminInvitee && typeof window !== "undefined") {
       if (selectedName) {
         window.localStorage.setItem(storageKey, selectedName);
       } else {
@@ -178,6 +206,14 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
       return;
     }
 
+    if (isShared) {
+      if (rememberedName) {
+        hydrateParticipantSelection(rememberedName);
+      }
+      setHasInitializedSelection(true);
+      return;
+    }
+
     if (hasAdminInvitee && adminInviteeName) {
       setParticipantName(adminInviteeName);
       hydrateParticipantSelection(adminInviteeName);
@@ -193,7 +229,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
     }
 
     setHasInitializedSelection(true);
-  }, [adminInviteeName, hasAdminInvitee, hasInitializedSelection, hasLockedInvitee, hydrateParticipantSelection, legacyStorageKey, lockedInviteeName, poll.invitees, storageKey]);
+  }, [adminInviteeName, hasAdminInvitee, hasInitializedSelection, hasLockedInvitee, hydrateParticipantSelection, isShared, legacyStorageKey, lockedInviteeName, poll.invitees, rememberedName, storageKey]);
 
   const handleSubmit = async () => {
     const trimmedName = participantName.trim();
@@ -221,6 +257,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
         body: JSON.stringify({
           name: trimmedName,
           inviteToken: inviteToken ?? undefined,
+          timeZone: isShared ? browserTimeZone : undefined,
           votes: poll.timeslots.map((timeslot) => ({
             timeslotId: timeslot.id,
             value: votes.find((vote) => vote.timeslotId === timeslot.id)?.value ?? "NO",
@@ -270,14 +307,18 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
 
           <div className="space-y-3">
             <div>
-              {hasLockedInvitee && matchedInvitee ? (
+              {(hasLockedInvitee || (isShared && !showNamePicker)) && matchedInvitee ? (
                 <div className="w-full rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 px-4 py-3 sm:w-80 shadow-sm">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/70">Secure Invite</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/70">{isShared ? "Your name" : "Secure Invite"}</p>
                   <div className="mt-1.5 flex min-w-0 items-center justify-between gap-3 text-left">
                     <span className="truncate font-display font-semibold text-foreground">{matchedInvitee.name}</span>
-                    <span className="flex-shrink-0 rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                      {matchedInvitee.timeZoneLabel}
-                    </span>
+                    {isShared ? (
+                      <button type="button" onClick={() => handleParticipantSelection("")} className="flex-shrink-0 text-xs font-medium text-primary underline underline-offset-2">Change</button>
+                    ) : (
+                      <span className="flex-shrink-0 rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                        {matchedInvitee.timeZoneLabel}
+                      </span>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -348,6 +389,32 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
                       ) : null}
                     </SelectContent>
                   </Select>
+                  {isShared ? (
+                    <form
+                      className="flex w-full gap-2 sm:w-80"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        const typedName = newName.trim();
+                        if (!typedName) {
+                          setNameError("Enter your name to continue");
+                          return;
+                        }
+                        const existing = poll.invitees.find((invitee) => invitee.name.toLocaleLowerCase() === typedName.toLocaleLowerCase());
+                        handleParticipantSelection(existing?.name ?? typedName);
+                        setNewName("");
+                      }}
+                    >
+                      <input
+                        aria-label="Add your name"
+                        value={newName}
+                        onChange={(event) => setNewName(event.target.value)}
+                        maxLength={120}
+                        placeholder="Or add your name"
+                        className="min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                      />
+                      <button type="submit" className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">Continue</button>
+                    </form>
+                  ) : null}
                 </div>
               )}
               {nameError ? <p className="mt-1.5 text-xs text-destructive animate-fade-in">{nameError}</p> : null}

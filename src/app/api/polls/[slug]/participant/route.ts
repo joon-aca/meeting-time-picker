@@ -45,14 +45,16 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       return jsonResponse({ error: "Poll not found" }, { status: 404 });
     }
 
-    const inviteeName = resolveInviteeNameFromToken(
-      slug,
-      searchParams.get("invite") ?? "",
-      poll.invitees.map((invitee) => invitee.name),
-    );
-    const invitee = poll.invitees.find((candidate) => candidate.name === inviteeName);
-    if (!invitee || (!invitee.isAdmin && invitee.name !== name)) {
-      return jsonResponse({ error: "Valid invite code required" }, { status: 403 });
+    if (poll.accessMode !== "SHARED") {
+      const inviteeName = resolveInviteeNameFromToken(
+        slug,
+        searchParams.get("invite") ?? "",
+        poll.invitees.map((invitee) => invitee.name),
+      );
+      const invitee = poll.invitees.find((candidate) => candidate.name === inviteeName);
+      if (!invitee || (!invitee.isAdmin && invitee.name !== name)) {
+        return jsonResponse({ error: "Valid invite code required" }, { status: 403 });
+      }
     }
     const participant = await getParticipantByName(slug, name);
 

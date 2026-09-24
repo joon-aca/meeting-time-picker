@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { seedFileSchema } from "../src/lib/poll-schemas";
@@ -24,6 +24,7 @@ function insert(table: string, row: Record<string, string | number | boolean | n
 async function main() {
   const source = option("--source");
   const output = option("--output") ?? "d1/seed.local.sql";
+  const baseUrl = option("--base-url");
 
   if (!source) {
     throw new Error("Provide --source path/to/polls.json. This command never selects poll data implicitly.");
@@ -31,17 +32,20 @@ async function main() {
 
   const polls = seedFileSchema.parse(JSON.parse(await readFile(source, "utf8")));
   const statements: string[] = [];
+  const sharedLinks: string[] = [];
 
   for (const poll of polls) {
     const pollId = randomUUID();
+    const slug = poll.accessMode === "SHARED" ? `${poll.slug}-${randomBytes(16).toString("base64url")}` : poll.slug;
     const timeslotIds = poll.timeslots.map(() => randomUUID());
 
     statements.push(insert("Poll", {
       id: pollId,
-      slug: poll.slug,
+      slug,
       title: poll.title,
       description: poll.description,
       timezone: poll.timezone,
+      accessMode: poll.accessMode,
       createdAt: poll.createdAt,
     }));
 
@@ -89,10 +93,16 @@ async function main() {
         }));
       }
     }
+
+    if (poll.accessMode === "SHARED") {
+      const pollPath = `/poll/${slug}`;
+      sharedLinks.push(baseUrl ? `${baseUrl.replace(/\/+$/, "")}${pollPath}` : pollPath);
+    }
   }
 
   await writeFile(output, `${statements.join("\n")}\n`, { flag: "wx", mode: 0o600 });
   console.log(`Wrote ${statements.length} INSERT statements to ${path.resolve(output)}.`);
+  for (const link of sharedLinks) console.log(`Shared poll link: ${link}`);
   console.log("Existing polls are never replaced. Check the source and target before importing.");
 }
 

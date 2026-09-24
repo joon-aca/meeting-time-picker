@@ -14,6 +14,7 @@ model Poll {
   title        String
   description  String
   timezone     String
+  accessMode   String        @default("INVITE")
   createdAt    DateTime      @default(now())
   timeslots    Timeslot[]
   participants Participant[]

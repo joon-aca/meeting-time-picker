@@ -32,6 +32,7 @@ async function main() {
         title: poll.title,
         description: poll.description,
         timezone: poll.timezone,
+        accessMode: poll.accessMode,
         createdAt: new Date(poll.createdAt),
       },
     });

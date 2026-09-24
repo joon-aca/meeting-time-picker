@@ -28,8 +28,6 @@ export interface Invitee {
   isAdmin: boolean;
   timeZone: string;
   timeZoneLabel: string;
-  email: string | null;
-  note: string | null;
 }
 
 export interface Poll {
@@ -38,6 +36,7 @@ export interface Poll {
   title: string;
   description: string;
   timezone: string;
+  accessMode: "INVITE" | "SHARED";
   timeslots: Timeslot[];
   participants: Participant[];
   invitees: Invitee[];

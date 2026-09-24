@@ -17,7 +17,15 @@ export const participantVoteSchema = z.object({
 export const participantPayloadSchema = z.object({
   name: participantNameSchema,
   votes: z.array(participantVoteSchema),
-  inviteToken: z.string().trim().min(1),
+  inviteToken: z.string().trim().optional(),
+  timeZone: z.string().trim().max(100).refine((value) => {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: value });
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Invalid timezone").optional(),
 });
 
 const seedVoteSchema = z.object({
@@ -51,6 +59,7 @@ export const seedPollSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1),
   timezone: z.string().trim().min(1),
+  accessMode: z.enum(["INVITE", "SHARED"]).default("INVITE"),
   createdAt: z.string().datetime(),
   timeslots: z.array(seedTimeslotSchema).min(1),
   invitees: z.array(seedInviteeSchema).default([]),

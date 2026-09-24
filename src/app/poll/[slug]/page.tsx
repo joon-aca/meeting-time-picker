@@ -1,11 +1,14 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { PollPageClient } from "@/components/poll/PollPageClient";
 import { SecurePollAccess } from "@/components/poll/SecurePollAccess";
 import { resolveInviteeNameFromToken } from "@/lib/invite-tokens";
 import { getPollBySlug } from "@/lib/polls";
 import { getTimeZoneDisplayLabel } from "@/lib/poll-utils";
+import { parseRememberedName, rememberedNameCookieKey } from "@/lib/remembered-name";
 
 export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false, follow: false } };
 
 export default async function PollPage({
   params,
@@ -20,6 +23,21 @@ export default async function PollPage({
 
   if (!poll) {
     notFound();
+  }
+
+  if (poll.accessMode === "SHARED") {
+    const cookieStore = await cookies();
+    const rememberedName = parseRememberedName(cookieStore.get(rememberedNameCookieKey())?.value);
+
+    return (
+      <PollPageClient
+        initialPoll={poll}
+        lockedInviteeName={null}
+        adminInviteeName={null}
+        inviteToken={null}
+        rememberedName={rememberedName}
+      />
+    );
   }
 
   const tokenName = invite ? resolveInviteeNameFromToken(slug, invite, poll.invitees.map((invitee) => invitee.name)) : null;

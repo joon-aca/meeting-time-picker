@@ -43,6 +43,7 @@ function toPoll(record: PollRecord): Poll {
     title: record.title,
     description: record.description,
     timezone: record.timezone,
+    accessMode: record.accessMode as Poll["accessMode"],
     createdAt: record.createdAt.toISOString(),
     timeslots: record.timeslots.map((timeslot) => ({
       id: timeslot.id,
@@ -57,8 +58,6 @@ function toPoll(record: PollRecord): Poll {
       isAdmin: invitee.isAdmin,
       timeZone: invitee.timeZone,
       timeZoneLabel: invitee.timeZoneLabel || getTimeZoneDisplayLabel(invitee.timeZone, record.timeslots[0]?.date, record.timeslots[0]?.startTime),
-      email: invitee.email,
-      note: invitee.note,
     })),
     participants: record.participants.map((participant) => ({
       id: participant.id,
@@ -96,20 +95,6 @@ export async function listPolls(): Promise<Poll[]> {
   });
 
   return polls.map(toPoll);
-}
-
-export async function getDefaultPollSlug(): Promise<string | null> {
-  const prisma = getPrisma();
-  const poll = await prisma.poll.findFirst({
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      slug: true,
-    },
-  });
-
-  return poll?.slug ?? null;
 }
 
 export async function getPollBySlug(slug: string): Promise<Poll | null> {
@@ -198,25 +183,29 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
   }
 
   const inviteeNames = poll.invitees.map((invitee) => invitee.name);
+  const newInviteeTimeZone = payload.timeZone ?? poll.timezone;
+  const newInviteeTimeZoneLabel = getTimeZoneDisplayLabel(newInviteeTimeZone, poll.timeslots[0]?.date, poll.timeslots[0]?.startTime);
 
-  if (!inviteeNames.includes(payload.name)) {
-    throw new Error("Selected participant is not part of this poll");
-  }
+  if (poll.accessMode !== "SHARED") {
+    if (!inviteeNames.includes(payload.name)) {
+      throw new Error("Selected participant is not part of this poll");
+    }
 
-  const inviteeNameFromToken = resolveInviteeNameFromToken(slug, payload.inviteToken, inviteeNames);
+    const inviteeNameFromToken = resolveInviteeNameFromToken(slug, payload.inviteToken ?? "", inviteeNames);
 
-  if (!inviteeNameFromToken) {
-    throw new Error("Invalid invite token");
-  }
+    if (!inviteeNameFromToken) {
+      throw new Error("Invalid invite token");
+    }
 
-  const tokenInvitee = poll.invitees.find((invitee) => invitee.name === inviteeNameFromToken);
+    const tokenInvitee = poll.invitees.find((invitee) => invitee.name === inviteeNameFromToken);
 
-  if (!tokenInvitee) {
-    throw new Error("Invalid invite token");
-  }
+    if (!tokenInvitee) {
+      throw new Error("Invalid invite token");
+    }
 
-  if (!tokenInvitee.isAdmin && inviteeNameFromToken !== payload.name) {
-    throw new Error("This invite link cannot update another participant");
+    if (!tokenInvitee.isAdmin && inviteeNameFromToken !== payload.name) {
+      throw new Error("This invite link cannot update another participant");
+    }
   }
 
   const normalizedVotes = expectedTimeslotIds.map((timeslotId) => ({
@@ -254,6 +243,13 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
                 .bind(participantId, poll.id, payload.name, submittedAt),
             ];
 
+        if (poll.accessMode === "SHARED" && !inviteeNames.includes(payload.name)) {
+          statements.unshift(
+            database.prepare('INSERT OR IGNORE INTO "Invitee" ("id", "pollId", "name", "isAdmin", "timeZone", "timeZoneLabel") VALUES (?, ?, ?, 0, ?, ?)')
+              .bind(randomUUID(), poll.id, payload.name, newInviteeTimeZone, newInviteeTimeZoneLabel),
+          );
+        }
+
         for (const vote of normalizedVotes) {
           statements.push(
             database
@@ -270,6 +266,18 @@ export async function saveParticipantVotes(slug: string, input: unknown) {
         });
       })()
     : await prisma.$transaction(async (tx) => {
+        if (poll.accessMode === "SHARED" && !inviteeNames.includes(payload.name)) {
+          await tx.invitee.upsert({
+            where: { pollId_name: { pollId: poll.id, name: payload.name } },
+            create: {
+              pollId: poll.id,
+              name: payload.name,
+              timeZone: newInviteeTimeZone,
+              timeZoneLabel: newInviteeTimeZoneLabel,
+            },
+            update: {},
+          });
+        }
         const savedParticipant = existingParticipant
           ? await tx.participant.update({
               where: { id: existingParticipant.id },

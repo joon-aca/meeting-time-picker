@@ -11,7 +11,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
   }
 
   const inviteToken = new URL(request.url).searchParams.get("invite") ?? "";
-  if (!resolveInviteeNameFromToken(slug, inviteToken, poll.invitees.map((invitee) => invitee.name))) {
+  if (poll.accessMode !== "SHARED" && !resolveInviteeNameFromToken(slug, inviteToken, poll.invitees.map((invitee) => invitee.name))) {
     return NextResponse.json({ error: "Valid invite code required" }, { status: 403, headers: { "Cache-Control": "no-store" } });
   }
 
