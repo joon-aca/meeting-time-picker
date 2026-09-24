@@ -51,10 +51,16 @@ the prior poll, including its responses.
 
 For a new meeting, create a new JSON poll with a **new slug**. This keeps old
 responses separate. The JSON format is shown in `prisma/seed-data/polls.json`.
+Set `"accessMode": "SHARED"` to let anyone with one meeting link select or
+add their name. The generator appends a random 128-bit suffix to the supplied
+slug, then prints the final link. Keep that link private and place it in the
+calendar invitation. A cookie remembers each browser's selected name for up to
+one year, including future shared polls; people can use **Change** if they
+share a device.
 Generate an insert-only D1 SQL file, inspect it, then import it:
 
 ```bash
-pnpm exec tsx scripts/generate-d1-seed.ts --source prisma/seed-data/polls.local.json --output d1/new-board.local.sql
+pnpm exec tsx scripts/generate-d1-seed.ts --source prisma/seed-data/polls.local.json --output d1/new-board.local.sql --base-url https://meeting.africacode.org
 pnpm exec wrangler d1 execute meeting-time-picker --remote --file d1/new-board.local.sql
 ```
 
@@ -63,8 +69,9 @@ already exists. Keep generated SQL private: it may contain names and email
 addresses. Do not run `pnpm run prisma:seed` against a database with responses;
 that older command deletes and recreates every poll.
 
-The home page redirects to the newest poll by `createdAt`. Invite links are
-generated from the exact invitee names and poll slug:
+The home page is a static landing page; it does not reveal the current shared
+meeting link. For older invite-mode polls, invite links are generated from the
+exact invitee names and poll slug:
 
 ```bash
 pnpm run invite:links -- --base-url https://meeting.africacode.org

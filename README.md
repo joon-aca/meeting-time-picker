@@ -6,7 +6,7 @@ A lightweight scheduling poll app for small groups.
 - one SQLite file
 - one Caddy reverse proxy
 - no accounts
-- optional human-friendly invite links
+- shared meeting links or individual invite links
 
 ## What it does
 
@@ -15,10 +15,19 @@ A lightweight scheduling poll app for small groups.
 - results are live and ranked from real saved responses
 - week two stays hidden unless needed
 - invite links can lock the page to a specific person
+- shared links let people add their own name; a cookie remembers it for future meetings on that browser
 
 ## Poll data
 
 Polls are defined in JSON and loaded through the seed script.
+
+For a new low-friction meeting, set `"accessMode": "SHARED"` in the private
+poll JSON. The D1 SQL generator appends a random suffix to its slug and prints
+one link to share with everyone. People can select a listed name or add their
+own, and can change the remembered name on a shared device. The cookie is only
+a convenience; anyone with the meeting link can choose a name and update votes.
+New participants are shown times in their browser's timezone.
+Older polls without `accessMode` remain in invite mode.
 
 Public sample data lives in:
 
@@ -29,6 +38,7 @@ Private local data can live in:
 - `prisma/seed-data/polls.local.json`
 
 That file is gitignored and automatically preferred by `pnpm run prisma:seed`.
+Use the D1 generator documented in [CLOUDFLARE.md](/Users/joon/dev/github/meeting-time-picker/CLOUDFLARE.md) for live polls; `prisma:seed` replaces local data.
 
 Invitees support an optional `isAdmin` flag.
 
@@ -55,7 +65,7 @@ pnpm run prisma:seed
 pnpm run dev
 ```
 
-Then open:
+Then open the sample invite poll:
 
 - [http://localhost:3000/poll/aca-board-meeting-picker](http://localhost:3000/poll/aca-board-meeting-picker)
 
