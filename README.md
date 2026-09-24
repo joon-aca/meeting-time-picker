@@ -28,7 +28,7 @@ Private local data can live in:
 
 - `prisma/seed-data/polls.local.json`
 
-That file is gitignored and automatically preferred by `npm run prisma:seed`.
+That file is gitignored and automatically preferred by `pnpm run prisma:seed`.
 
 Invitees support an optional `isAdmin` flag.
 
@@ -49,10 +49,10 @@ If `isAdmin` is omitted, it defaults to `false`.
 
 ```bash
 cp .env.example .env
-npm install
-npx prisma migrate dev --name init
-npm run prisma:seed
-npm run dev
+pnpm install
+pnpm exec prisma migrate dev --name init
+pnpm run prisma:seed
+pnpm run dev
 ```
 
 Then open:
@@ -64,7 +64,7 @@ Then open:
 Generate invite links with:
 
 ```bash
-npm run invite:links -- --base-url https://polls.example.com
+pnpm run invite:links -- --base-url https://polls.example.com
 ```
 
 Current invite token behavior:

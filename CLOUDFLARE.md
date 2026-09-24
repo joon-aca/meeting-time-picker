@@ -15,12 +15,12 @@ Cloudflare resources:
 ## Local preview
 
 ```bash
-npm ci
-npm run d1:migrate:local
-npm run d1:seed:sql -- --source prisma/seed-data/polls.json --output d1/seed.local.sql
-npx wrangler d1 execute meeting-time-picker --local --file d1/seed.local.sql
-npm run build:worker
-npm run preview:worker
+pnpm install --frozen-lockfile
+pnpm run d1:migrate:local
+pnpm exec tsx scripts/generate-d1-seed.ts --source prisma/seed-data/polls.json --output d1/seed.local.sql
+pnpm exec wrangler d1 execute meeting-time-picker --local --file d1/seed.local.sql
+pnpm run build:worker
+pnpm run preview:worker
 ```
 
 The SQL generator refuses to overwrite its output. Remove or choose another local
@@ -33,13 +33,13 @@ Authenticate Wrangler with the Cloudflare account that owns the database and zon
 The database ID is recorded in `wrangler.jsonc`.
 
 ```bash
-npm ci
-npm run d1:migrate:remote
-npm run build:worker
-npm run deploy:worker
+pnpm install --frozen-lockfile
+pnpm run d1:migrate:remote
+pnpm run build:worker
+pnpm run deploy:worker
 ```
 
-`npm run deploy:worker` uploads the build already in `.open-next`. Rebuild first
+`pnpm run deploy:worker` uploads the build already in `.open-next`. Rebuild first
 after code changes. The Worker uses its D1 binding; it does not use `DATABASE_URL`
 or the local SQLite file.
 
@@ -54,20 +54,20 @@ responses separate. The JSON format is shown in `prisma/seed-data/polls.json`.
 Generate an insert-only D1 SQL file, inspect it, then import it:
 
 ```bash
-npm run d1:seed:sql -- --source prisma/seed-data/polls.local.json --output d1/new-board.local.sql
-npx wrangler d1 execute meeting-time-picker --remote --file d1/new-board.local.sql
+pnpm exec tsx scripts/generate-d1-seed.ts --source prisma/seed-data/polls.local.json --output d1/new-board.local.sql
+pnpm exec wrangler d1 execute meeting-time-picker --remote --file d1/new-board.local.sql
 ```
 
 The generator never deletes or updates existing polls. It fails if the slug
 already exists. Keep generated SQL private: it may contain names and email
-addresses. Do not run `npm run prisma:seed` against a database with responses;
+addresses. Do not run `pnpm run prisma:seed` against a database with responses;
 that older command deletes and recreates every poll.
 
 The home page redirects to the newest poll by `createdAt`. Invite links are
 generated from the exact invitee names and poll slug:
 
 ```bash
-npm run invite:links -- --base-url https://meeting.africacode.org
+pnpm run invite:links -- --base-url https://meeting.africacode.org
 ```
 
 The invite link generator prefers `polls.local.json` when present.

@@ -69,7 +69,8 @@
       "@swc/core",
       "esbuild",
       "prisma",
-      "sharp"
+      "sharp",
+      "workerd"
     ]
   }
 }
