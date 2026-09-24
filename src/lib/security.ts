@@ -107,3 +107,34 @@ export function isPayloadTooLarge(request: Request, maxBytes: number): boolean {
   const parsed = Number(contentLength);
   return Number.isFinite(parsed) && parsed > maxBytes;
 }
+
+export class PayloadTooLargeError extends Error {}
+
+export async function readJsonWithinLimit(request: Request, maxBytes: number): Promise<unknown> {
+  if (isPayloadTooLarge(request, maxBytes)) throw new PayloadTooLargeError("Payload too large");
+
+  const reader = request.body?.getReader();
+  if (!reader) return JSON.parse("");
+
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBytes) {
+      await reader.cancel();
+      throw new PayloadTooLargeError("Payload too large");
+    }
+    chunks.push(value);
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}

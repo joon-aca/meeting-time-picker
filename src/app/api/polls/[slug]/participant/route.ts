@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 import { getParticipantByName, getPollBySlug, saveParticipantVotes } from "@/lib/polls";
 import { participantNameSchema } from "@/lib/poll-schemas";
 import { resolveInviteeNameFromToken } from "@/lib/invite-tokens";
-import { enforceRateLimit, getClientIp, hasJsonContentType, isPayloadTooLarge, isSameOriginRequest } from "@/lib/security";
+import { enforceRateLimit, getClientIp, hasJsonContentType, isSameOriginRequest, PayloadTooLargeError, readJsonWithinLimit } from "@/lib/security";
 
 const API_RESPONSE_HEADERS = {
   "Cache-Control": "no-store",
@@ -96,15 +96,18 @@ export async function PUT(request: Request, context: { params: Promise<{ slug: s
       return jsonResponse({ error: "Content-Type must be application/json" }, { status: 415 });
     }
 
-    if (isPayloadTooLarge(request, 20 * 1024)) {
-      return jsonResponse({ error: "Payload too large" }, { status: 413 });
-    }
-
-    const payload = await request.json();
+    const payload = await readJsonWithinLimit(request, 20 * 1024);
     const result = await saveParticipantVotes(slug, payload);
 
     return jsonResponse(result);
   } catch (error) {
+    if (error instanceof PayloadTooLargeError) {
+      return jsonResponse({ error: "Payload too large" }, { status: 413 });
+    }
+
+    if (error instanceof SyntaxError) {
+      return jsonResponse({ error: "Invalid JSON" }, { status: 400 });
+    }
     if (error instanceof ZodError) {
       return jsonResponse({ error: error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
     }
