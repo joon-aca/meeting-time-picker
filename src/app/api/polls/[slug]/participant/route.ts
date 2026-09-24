@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { getParticipantByName, saveParticipantVotes } from "@/lib/polls";
+import { getParticipantByName, getPollBySlug, saveParticipantVotes } from "@/lib/polls";
 import { participantNameSchema } from "@/lib/poll-schemas";
+import { resolveInviteeNameFromToken } from "@/lib/invite-tokens";
 import { enforceRateLimit, getClientIp, hasJsonContentType, isPayloadTooLarge, isSameOriginRequest } from "@/lib/security";
 
 const API_RESPONSE_HEADERS = {
@@ -39,6 +40,20 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
     const { searchParams } = new URL(request.url);
     const name = participantNameSchema.parse(searchParams.get("name") ?? "");
+    const poll = await getPollBySlug(slug);
+    if (!poll) {
+      return jsonResponse({ error: "Poll not found" }, { status: 404 });
+    }
+
+    const inviteeName = resolveInviteeNameFromToken(
+      slug,
+      searchParams.get("invite") ?? "",
+      poll.invitees.map((invitee) => invitee.name),
+    );
+    const invitee = poll.invitees.find((candidate) => candidate.name === inviteeName);
+    if (!invitee || (!invitee.isAdmin && invitee.name !== name)) {
+      return jsonResponse({ error: "Valid invite code required" }, { status: 403 });
+    }
     const participant = await getParticipantByName(slug, name);
 
     if (!participant) {
