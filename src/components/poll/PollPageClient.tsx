@@ -105,19 +105,11 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
     return groupedWeeks.map(([, slotIds]) => slotIds);
   }, [poll.timeslots, poll.timezone]);
   const shouldAlwaysShowSecondWeek = useMemo(() => {
-    const [firstWeekSlotIds, secondWeekSlotIds] = weekSlotIds;
+    const secondWeekSlotIds = new Set(weekSlotIds[1] ?? []);
 
-    if (!firstWeekSlotIds || !secondWeekSlotIds) {
-      return false;
-    }
-
-    return poll.participants.some((participant) => {
-      const participantVoteMap = new Map(participant.votes.map((vote) => [vote.timeslotId, vote.value]));
-      const hasFirstWeekYes = firstWeekSlotIds.some((timeslotId) => participantVoteMap.get(timeslotId) === "YES");
-      const hasSecondWeekYes = secondWeekSlotIds.some((timeslotId) => participantVoteMap.get(timeslotId) === "YES");
-
-      return !hasFirstWeekYes && hasSecondWeekYes;
-    });
+    return poll.participants.some((participant) =>
+      participant.votes.some((vote) => vote.value === "YES" && secondWeekSlotIds.has(vote.timeslotId)),
+    );
   }, [poll.participants, weekSlotIds]);
 
   useEffect(() => {
