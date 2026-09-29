@@ -2,9 +2,8 @@
 
 A lightweight scheduling poll app for small groups.
 
-- one Next.js app
-- one SQLite file
-- one Caddy reverse proxy
+- one Next.js app on Cloudflare Workers
+- one Cloudflare D1 database in production
 - no accounts
 - shared meeting links or individual invite links
 

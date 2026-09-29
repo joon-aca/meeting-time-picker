@@ -1,9 +1,8 @@
 # Cloudflare Worker deployment
 
-The app runs on Cloudflare Workers with one D1 database. The Worker currently runs at
-`https://meeting-time-picker.cold-mud-a444.workers.dev`. The existing
-`meeting.africacode.org` hostname still points at Lando; switch it after the new
-board poll is ready.
+The app runs on Cloudflare Workers with one D1 database. The public hostname is
+`https://meeting.africacode.org`; the Worker also runs at
+`https://meeting-time-picker.cold-mud-a444.workers.dev`.
 
 Cloudflare resources:
 
@@ -79,19 +78,20 @@ pnpm run invite:links -- --base-url https://meeting.africacode.org
 
 The invite link generator prefers `polls.local.json` when present.
 
-## Moving the hostname
+## Hostname routing
 
-`meeting.africacode.org` currently resolves directly to Lando. Once the new poll
-has been imported and checked on the `workers.dev` URL, attach
-`meeting.africacode.org` as a Worker custom domain. Cloudflare will create its
-DNS record and certificate. Update `wrangler.jsonc` with a `routes` entry:
+`meeting.africacode.org` has an existing A record for the former Lando server.
+It is proxied by Cloudflare, and a Worker route handles all requests before they
+reach that origin. Keep the DNS record proxied while using this route. The route
+in `wrangler.jsonc` is:
 
 ```json
-"routes": [{ "pattern": "meeting.africacode.org", "custom_domain": true }]
+"routes": [{ "pattern": "meeting.africacode.org/*", "zone_name": "africacode.org" }]
 ```
 
-Then deploy again and check the poll, invite links, and vote submission on the
-custom domain. The former Caddy route on Lando can be removed after cutover.
+After deploying, check the poll and vote submission on the public hostname.
+The former Caddy route on Lando is no longer used for this hostname. DNS caches
+may temporarily keep the previous direct A record after the proxy is enabled.
 
 The Worker and D1 use only Free plan features. Cloudflare's Free limits still
 apply; monitor Worker CPU and D1 usage after the first invitations go out.
