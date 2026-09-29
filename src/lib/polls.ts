@@ -4,7 +4,7 @@ import { getD1Database, getPrisma } from "@/lib/prisma";
 import { participantPayloadSchema } from "@/lib/poll-schemas";
 import { Poll, Vote } from "@/lib/poll-types";
 import { resolveInviteeNameFromToken } from "@/lib/invite-tokens";
-import { formatTimeslotLabel, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
+import { formatTimeslotLabel, getTimeZoneAbbreviationsForSlots, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
 
 const pollInclude = {
   timeslots: {
@@ -52,13 +52,18 @@ function toPoll(record: PollRecord): Poll {
       endTime: timeslot.endTime,
       label: formatTimeslotLabel(timeslot.date, timeslot.startTime, timeslot.endTime, record.timezone, record.timezone),
     })),
-    invitees: record.invitees.map((invitee) => ({
-      id: invitee.id,
-      name: invitee.name,
-      isAdmin: invitee.isAdmin,
-      timeZone: invitee.timeZone,
-      timeZoneLabel: invitee.timeZoneLabel || getTimeZoneDisplayLabel(invitee.timeZone, record.timeslots[0]?.date, record.timeslots[0]?.startTime),
-    })),
+    invitees: record.invitees.map((invitee) => {
+      const abbreviations = getTimeZoneAbbreviationsForSlots(invitee.timeZone, record.timeslots);
+      return {
+        id: invitee.id,
+        name: invitee.name,
+        isAdmin: invitee.isAdmin,
+        timeZone: invitee.timeZone,
+        timeZoneLabel: abbreviations.length > 1
+          ? abbreviations.join("/")
+          : invitee.timeZoneLabel || abbreviations[0] || invitee.timeZone,
+      };
+    }),
     participants: record.participants.map((participant) => ({
       id: participant.id,
       name: participant.name,

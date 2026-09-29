@@ -18,7 +18,7 @@ import {
   SelectSeparator,
   SelectTrigger,
 } from "@/components/ui/select";
-import { getTimeslotDisplayMeta, getTimeZoneDisplayLabel } from "@/lib/poll-utils";
+import { getTimeslotDisplayMeta, getTimeZoneDisplayLabelForSlots } from "@/lib/poll-utils";
 import { rememberedNameCookieKey, rememberedNameCookiePath } from "@/lib/remembered-name";
 
 interface PollPageClientProps {
@@ -58,12 +58,12 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
       name: normalizedName,
       isAdmin: false,
       timeZone: browserTimeZone,
-      timeZoneLabel: getTimeZoneDisplayLabel(browserTimeZone, poll.timeslots[0]?.date, poll.timeslots[0]?.startTime),
+      timeZoneLabel: getTimeZoneDisplayLabelForSlots(browserTimeZone, poll.timeslots),
     } : undefined);
   const activeTimeZone = matchedInvitee?.timeZone ?? poll.timezone;
   const activeTimeZoneLabel =
     matchedInvitee?.timeZoneLabel ??
-    getTimeZoneDisplayLabel(poll.timezone, poll.timeslots[0]?.date, poll.timeslots[0]?.startTime);
+    getTimeZoneDisplayLabelForSlots(poll.timezone, poll.timeslots);
   const sortedInvitees = useMemo(() => {
     const submittedNames = new Set(poll.participants.map((participant) => participant.name));
 
@@ -299,7 +299,7 @@ export function PollPageClient({ initialPoll, lockedInviteeName, adminInviteeNam
         <PollHeader
           title={poll.title}
           description={poll.description}
-          timezone={getTimeZoneDisplayLabel(poll.timezone, poll.timeslots[0]?.date, poll.timeslots[0]?.startTime)}
+          timezone={getTimeZoneDisplayLabelForSlots(poll.timezone, poll.timeslots)}
         />
 
         <div className="space-y-6">

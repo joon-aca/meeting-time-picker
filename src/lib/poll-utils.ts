@@ -72,12 +72,28 @@ export function getTimeslotDateTime(timeslot: Timeslot): Date {
 
 export function getTimeZoneAbbreviation(timeZone: string, date: string, time = "12:00"): string {
   const instant = zonedDateTimeToUtc(date, time, timeZone);
-  const parts = getFormatter("en-US", timeZone, {
+  const locale = timeZone.startsWith("Europe/") ? "en-GB" : "en-US";
+  const parts = getFormatter(locale, timeZone, {
     timeZoneName: "short",
     hour: "numeric",
   }).formatToParts(instant);
 
   return parts.find((part) => part.type === "timeZoneName")?.value ?? timeZone;
+}
+
+export function getTimeZoneAbbreviationsForSlots(
+  timeZone: string,
+  timeslots: Pick<Timeslot, "date" | "startTime">[],
+): string[] {
+  return [...new Set(timeslots.map((timeslot) => getTimeZoneAbbreviation(timeZone, timeslot.date, timeslot.startTime)))];
+}
+
+export function getTimeZoneDisplayLabelForSlots(
+  timeZone: string,
+  timeslots: Pick<Timeslot, "date" | "startTime">[],
+): string {
+  const abbreviations = getTimeZoneAbbreviationsForSlots(timeZone, timeslots);
+  return abbreviations.length > 0 ? `${timeZone} (${abbreviations.join("/")})` : timeZone;
 }
 
 export function getTimeZoneDisplayLabel(timeZone: string, date?: string, time = "12:00"): string {
