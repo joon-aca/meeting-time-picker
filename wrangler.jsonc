@@ -4,6 +4,7 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-24",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -14,6 +15,12 @@
       "database_name": "meeting-time-picker",
       "database_id": "76ec5030-70ff-4e27-a960-27578aff1fbf",
       "migrations_dir": "d1/migrations"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "meeting.africacode.org/*",
+      "zone_name": "africacode.org"
     }
   ],
   "observability": {
