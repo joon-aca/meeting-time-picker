@@ -122,6 +122,11 @@ function getRankedSlotTone(yesCount: number, maybeCount: number, totalInvitees: 
 
 export function RankedSlots({ poll, sourceTimeZone, targetTimeZone }: RankedSlotsProps) {
   const [showAll, setShowAll] = useState(false);
+
+  if (poll.participants.length === 0) {
+    return <p className="rounded-xl border border-border bg-card px-5 py-4 text-sm text-muted-foreground">Rankings will appear after the first response.</p>;
+  }
+
   const ranked = rankSlots(tallyVotes(poll));
   const totalInvitees = poll.invitees.length;
   const visibleRanked = showAll ? ranked : ranked.slice(0, DEFAULT_VISIBLE_SLOTS);
